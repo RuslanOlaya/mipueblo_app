@@ -1,4 +1,4 @@
-import { API_URL, state, cargarDatos, cargarVista, formatearFechaHora } from "./app.js";
+import { API_URL, state, cargarDatos, cargarVista, formatearFechaHora, activarFormatoMonedaInput, leerMoneda, escribirMoneda } from "./app.js";
 import { abrirVistaCheckin } from "./checkin.js";
 
 let filtroActual = "TODAS";
@@ -12,6 +12,10 @@ export function inicializarTablero() {
     document.querySelectorAll(".chip-filtro").forEach(btn => {
         btn.addEventListener("click", () => filtrarHabitaciones(btn.dataset.filtro));
     });
+
+    // Activar puntos de miles (10.000) en abonos y caja de check-out
+    activarFormatoMonedaInput(document.getElementById("abono-monto"));
+    activarFormatoMonedaInput(document.getElementById("chk-pago-monto"));
 
     // Eventos Modal Ocupada
     document.getElementById("btn-cerrar-modal-ocupada").addEventListener("click", cerrarModalOcupada);
@@ -160,12 +164,11 @@ function abrirModalCheckoutPago() {
     document.getElementById("chk-cliente-info").textContent =
         `${liquidacionActual.cliente} • ${reservaSeleccionadaActual.titular.tipo_documento}: ${liquidacionActual.documento}`;
 
-    document.getElementById("chk-total-alojamiento").textContent = `$${liquidacionActual.total_alojamiento.toLocaleString()}`;
-    document.getElementById("chk-abonos-previos").textContent = `Abonado previo: -$${liquidacionActual.total_abonado.toLocaleString()}`;
-    document.getElementById("chk-total-consumos").textContent = `$${liquidacionActual.total_consumos_tienda_lavanderia.toLocaleString()}`;
-    document.getElementById("chk-saldo-objetivo").textContent = `$${liquidacionActual.saldo_pendiente.toLocaleString()}`;
+    document.getElementById("chk-total-alojamiento").textContent = `$${liquidacionActual.total_alojamiento.toLocaleString("es-CO")}`;
+    document.getElementById("chk-abonos-previos").textContent = `Abonado previo: -$${liquidacionActual.total_abonado.toLocaleString("es-CO")}`;
+    document.getElementById("chk-total-consumos").textContent = `$${liquidacionActual.total_consumos_tienda_lavanderia.toLocaleString("es-CO")}`;
+    document.getElementById("chk-saldo-objetivo").textContent = `$${liquidacionActual.saldo_pendiente.toLocaleString("es-CO")}`;
 
-    // Sugerir monto inicial pendiente en el input
     const saldoPendiente = liquidacionActual.saldo_pendiente;
     const seccionPagos = document.getElementById("chk-seccion-pagos");
 
@@ -173,14 +176,13 @@ function abrirModalCheckoutPago() {
         seccionPagos.classList.add("hidden");
     } else {
         seccionPagos.classList.remove("hidden");
-        // Si hay consumos pendientes, sugerir primero el saldo de alojamiento; si no, el total pendiente
         const saldoAlojamientoSugerido = Math.max(0, liquidacionActual.total_alojamiento - liquidacionActual.total_abonado);
         if (saldoAlojamientoSugerido > 0 && liquidacionActual.total_consumos_tienda_lavanderia > 0) {
             document.getElementById("chk-pago-concepto").value = "Liquidación Alojamiento";
-            document.getElementById("chk-pago-monto").value = saldoAlojamientoSugerido;
+            escribirMoneda("chk-pago-monto", saldoAlojamientoSugerido);
         } else {
             document.getElementById("chk-pago-concepto").value = "Liquidación Total Estadía";
-            document.getElementById("chk-pago-monto").value = saldoPendiente;
+            escribirMoneda("chk-pago-monto", saldoPendiente);
         }
     }
 
@@ -200,7 +202,7 @@ function cerrarModalCheckoutPago() {
 function agregarPagoListaCheckout() {
     const concepto = document.getElementById("chk-pago-concepto").value;
     const metodo = document.getElementById("chk-pago-metodo").value;
-    const monto = parseFloat(document.getElementById("chk-pago-monto").value) || 0;
+    const monto = leerMoneda("chk-pago-monto");
 
     if (monto <= 0) {
         alert("Ingresa un monto válido mayor a $0.");
@@ -209,11 +211,10 @@ function agregarPagoListaCheckout() {
 
     pagosCierreCheckOut.push({ concepto, metodo_pago: metodo, monto });
 
-    // Calcular cuánto queda faltando para sugerirlo automáticamente en el siguiente pago
     const totalIngresado = pagosCierreCheckOut.reduce((acc, p) => acc + p.monto, 0);
     const restante = Math.max(0, liquidacionActual.saldo_pendiente - totalIngresado);
 
-    document.getElementById("chk-pago-monto").value = restante > 0 ? restante : "";
+    escribirMoneda("chk-pago-monto", restante);
     if (restante > 0 && concepto === "Liquidación Alojamiento" && liquidacionActual.total_consumos_tienda_lavanderia > 0) {
         document.getElementById("chk-pago-concepto").value = "Liquidación Tienda / Lavandería";
     }
@@ -247,7 +248,7 @@ function renderizarPagosCheckout() {
                 <span class="text-google-text font-medium">${pago.concepto}</span>
             </div>
             <div class="flex items-center gap-3">
-                <strong class="text-google-green">$${pago.monto.toLocaleString()}</strong>
+                <strong class="text-google-green">$${pago.monto.toLocaleString("es-CO")}</strong>
                 <button type="button" class="text-google-textSec hover:text-google-red transition" title="Eliminar pago">
                     <span class="material-symbols-rounded text-base">delete</span>
                 </button>
@@ -264,17 +265,17 @@ function renderizarPagosCheckout() {
     const totalIngresado = pagosCierreCheckOut.reduce((acc, p) => acc + p.monto, 0);
     const diferencia = saldoObjetivo - totalIngresado;
 
-    document.getElementById("chk-total-ingresado").textContent = `$${totalIngresado.toLocaleString()}`;
+    document.getElementById("chk-total-ingresado").textContent = `$${totalIngresado.toLocaleString("es-CO")}`;
     const estadoCuadre = document.getElementById("chk-estado-cuadre");
     const btnConfirmar = document.getElementById("btn-confirmar-chk-final");
 
     if (diferencia > 0) {
         estadoCuadre.className = "text-google-red font-medium mt-0.5";
-        estadoCuadre.textContent = `Falta por cubrir: $${diferencia.toLocaleString()}`;
+        estadoCuadre.textContent = `Falta por cubrir: $${diferencia.toLocaleString("es-CO")}`;
         btnConfirmar.disabled = true;
     } else if (diferencia < 0) {
         estadoCuadre.className = "text-amber-700 font-medium mt-0.5";
-        estadoCuadre.textContent = `Cambio / Devuelta al huésped: $${Math.abs(diferencia).toLocaleString()}`;
+        estadoCuadre.textContent = `Cambio / Devuelta al huésped: $${Math.abs(diferencia).toLocaleString("es-CO")}`;
         btnConfirmar.disabled = false;
     } else {
         estadoCuadre.className = "text-google-green font-medium mt-0.5";
@@ -290,7 +291,6 @@ async function confirmarCheckoutConPagos() {
     btnConfirmar.disabled = true;
 
     try {
-        // 1. Registrar cada forma de pago en /pagos (Efectivo, Nequi, etc.)
         for (const pago of pagosCierreCheckOut) {
             const resPago = await fetch(`${API_URL}/pagos`, {
                 method: "POST",
@@ -306,7 +306,6 @@ async function confirmarCheckoutConPagos() {
             if (!resPago.ok) throw new Error("Error registrando uno de los pagos");
         }
 
-        // 2. Generar la factura y pasar la habitación a Mantenimiento / Aseo
         const payloadFactura = {
             reserva_ids: [reservaSeleccionadaActual.id],
             tipo_cliente: reservaSeleccionadaActual.empresa ? "Empresa" : "Persona Natural",
@@ -477,13 +476,13 @@ async function cargarDetalleLiquidacion(reservaId) {
 
         contenedor.innerHTML = `
             <div class="flex justify-between"><span class="text-google-textSec">Días hospedados:</span> <span class="font-medium">${liquidacionActual.dias_hospedados} noche(s)</span></div>
-            <div class="flex justify-between"><span class="text-google-textSec">Tarifa noche:</span> <span>$${liquidacionActual.tarifa_noche.toLocaleString()}</span></div>
-            <div class="flex justify-between"><span class="text-google-textSec">Subtotal Alojamiento + Recargos:</span> <span>$${liquidacionActual.total_alojamiento.toLocaleString()}</span></div>
-            <div class="flex justify-between"><span class="text-google-textSec">Consumos (Tienda/Lavandería):</span> <span>$${liquidacionActual.total_consumos_tienda_lavanderia.toLocaleString()}</span></div>
-            <div class="flex justify-between text-google-green font-medium"><span class="text-google-textSec font-normal">Total Abonado:</span> <span>-$${liquidacionActual.total_abonado.toLocaleString()}</span></div>
+            <div class="flex justify-between"><span class="text-google-textSec">Tarifa noche:</span> <span>$${liquidacionActual.tarifa_noche.toLocaleString("es-CO")}</span></div>
+            <div class="flex justify-between"><span class="text-google-textSec">Subtotal Alojamiento + Recargos:</span> <span>$${liquidacionActual.total_alojamiento.toLocaleString("es-CO")}</span></div>
+            <div class="flex justify-between"><span class="text-google-textSec">Consumos (Tienda/Lavandería):</span> <span>$${liquidacionActual.total_consumos_tienda_lavanderia.toLocaleString("es-CO")}</span></div>
+            <div class="flex justify-between text-google-green font-medium"><span class="text-google-textSec font-normal">Total Abonado:</span> <span>-$${liquidacionActual.total_abonado.toLocaleString("es-CO")}</span></div>
             <div class="border-t border-google-border pt-2.5 mt-2 flex justify-between items-center">
                 <span class="font-display font-semibold">Saldo Pendiente a Pagar:</span>
-                <span class="font-display text-xl font-bold text-google-red">$${liquidacionActual.saldo_pendiente.toLocaleString()}</span>
+                <span class="font-display text-xl font-bold text-google-red">$${liquidacionActual.saldo_pendiente.toLocaleString("es-CO")}</span>
             </div>
         `;
     } catch (error) {
@@ -498,7 +497,7 @@ function poblarSelectProductos() {
     state.productos.forEach(p => {
         const opt = document.createElement("option");
         opt.value = p.id;
-        opt.textContent = `${p.nombre} - $${p.precio_unitario.toLocaleString()} ${p.tipo === "Producto" ? `(Stock: ${p.stock})` : ""}`;
+        opt.textContent = `${p.nombre} - $${p.precio_unitario.toLocaleString("es-CO")} ${p.tipo === "Producto" ? `(Stock: ${p.stock})` : ""}`;
         select.appendChild(opt);
     });
 }
@@ -507,9 +506,15 @@ async function registrarAbonoModal(e) {
     e.preventDefault();
     if (!reservaSeleccionadaActual) return;
 
+    const monto = leerMoneda("abono-monto");
+    if (monto <= 0) {
+        alert("Ingresa un monto válido mayor a $0.");
+        return;
+    }
+
     const payload = {
         reserva_id: reservaSeleccionadaActual.id,
-        monto: parseFloat(document.getElementById("abono-monto").value),
+        monto: monto,
         metodo_pago: document.getElementById("abono-metodo").value,
         concepto: "Abono parcial en recepción",
         observacion: document.getElementById("abono-obs").value || null

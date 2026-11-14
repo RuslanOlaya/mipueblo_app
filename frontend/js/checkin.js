@@ -1,4 +1,4 @@
-import { API_URL, state, cargarDatos, cargarVista } from "./app.js";
+import { API_URL, state, cargarDatos, cargarVista, activarFormatoMonedaInput, leerMoneda, escribirMoneda } from "./app.js";
 
 let estadiaAbiertaActiva = false;
 let pagosInicialesCheckin = [];
@@ -46,14 +46,16 @@ export function inicializarCheckin() {
     document.getElementById("checkin-tarifa-manual").addEventListener("change", toggleTarifaManual);
     document.getElementById("btn-toggle-abierta").addEventListener("click", toggleEstadiaAbierta);
 
+    // Activar puntos de miles (10.000) en los campos de moneda
+    ["checkin-precio-noche", "checkin-recargo", "checkin-monto-recibido"].forEach(id => {
+        activarFormatoMonedaInput(document.getElementById(id));
+        document.getElementById(id).addEventListener("input", recalcularResumenCheckin);
+    });
+
     // Eventos de caja y calculadora de devuelta
     document.getElementById("btn-checkin-agregar-pago").addEventListener("click", agregarPagoInicialCheckin);
     document.getElementById("btn-checkin-pago-exacto").addEventListener("click", agregarPagoExactoCheckin);
-    document.getElementById("checkin-monto-recibido").addEventListener("input", recalcularResumenCheckin);
-
-    ["checkin-precio-noche", "checkin-fecha-salida", "checkin-recargo"].forEach(id => {
-        document.getElementById(id).addEventListener("input", recalcularResumenCheckin);
-    });
+    document.getElementById("checkin-fecha-salida").addEventListener("input", recalcularResumenCheckin);
 
     document.getElementById("form-checkin-completo").addEventListener("submit", enviarFormularioCheckin);
 
@@ -215,12 +217,11 @@ function actualizarContadorOcupantes() {
 function actualizarOpcionesTarifa() {
     const habId = parseInt(document.getElementById("checkin-habitacion").value);
     const selectTarifa = document.getElementById("checkin-tarifa-select");
-    const inputPrecio = document.getElementById("checkin-precio-noche");
 
     if (!habId) {
         selectTarifa.disabled = true;
         selectTarifa.innerHTML = `<option value="">Primero elija una habitación...</option>`;
-        inputPrecio.value = 0;
+        escribirMoneda("checkin-precio-noche", 0);
         recalcularResumenCheckin();
         return;
     }
@@ -253,7 +254,7 @@ function alCambiarTarifaSelect() {
     const selectTarifa = document.getElementById("checkin-tarifa-select");
     const opcion = selectTarifa.options[selectTarifa.selectedIndex];
     if (opcion && opcion.dataset.precio && !document.getElementById("checkin-tarifa-manual").checked) {
-        document.getElementById("checkin-precio-noche").value = opcion.dataset.precio;
+        escribirMoneda("checkin-precio-noche", opcion.dataset.precio);
     }
     recalcularResumenCheckin();
 }
@@ -284,8 +285,8 @@ function toggleEstadiaAbierta() {
 // GESTIÓN DE PAGOS AL INGRESO Y CALCULADORA DE DEVUELTA
 // ==============================================================================
 function calcularTotalEstadiaActual() {
-    const precioNoche = parseFloat(document.getElementById("checkin-precio-noche").value) || 0;
-    const recargo = parseFloat(document.getElementById("checkin-recargo").value) || 0;
+    const precioNoche = leerMoneda("checkin-precio-noche");
+    const recargo = leerMoneda("checkin-recargo");
     const fechaSalidaVal = document.getElementById("checkin-fecha-salida").value;
 
     let noches = 1;
@@ -309,7 +310,7 @@ function calcularTotalEstadiaActual() {
 
 function agregarPagoInicialCheckin() {
     const metodo = document.getElementById("checkin-metodo-pago").value;
-    const monto = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+    const monto = leerMoneda("checkin-monto-recibido");
 
     if (monto <= 0) {
         alert("Ingresa el monto recibido del huésped.");
@@ -350,7 +351,7 @@ function renderizarListaPagosCheckin() {
                 <span class="text-google-text">Dinero recibido al ingreso</span>
             </div>
             <div class="flex items-center gap-3">
-                <strong class="text-google-green">$${pago.monto_recibido.toLocaleString()}</strong>
+                <strong class="text-google-green">$${pago.monto_recibido.toLocaleString("es-CO")}</strong>
                 <button type="button" class="text-google-textSec hover:text-google-red transition" title="Quitar pago">
                     <span class="material-symbols-rounded text-base">delete</span>
                 </button>
@@ -368,20 +369,18 @@ function renderizarListaPagosCheckin() {
 function recalcularResumenCheckin() {
     const { textoNoches, totalEstimado } = calcularTotalEstadiaActual();
 
-    // Sumar pagos agregados a la lista + lo que el usuario esté escribiendo en vivo en el input
     const acumuladoLista = pagosInicialesCheckin.reduce((acc, p) => acc + p.monto_recibido, 0);
-    const inputEnVivo = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+    const inputEnVivo = leerMoneda("checkin-monto-recibido");
     const totalEntregado = acumuladoLista + inputEnVivo;
 
-    // Si entregó más del total, la diferencia es devuelta y el abono real aplicado es el totalEstimado
     const devuelta = Math.max(0, totalEntregado - totalEstimado);
     const abonoRealAplicado = Math.min(totalEntregado, totalEstimado);
     const saldoPendiente = Math.max(0, totalEstimado - abonoRealAplicado);
 
     document.getElementById("resumen-noches").textContent = textoNoches;
-    document.getElementById("resumen-total").textContent = `$${totalEstimado.toLocaleString()}`;
-    document.getElementById("resumen-abonado-real").textContent = `$${abonoRealAplicado.toLocaleString()}`;
-    document.getElementById("resumen-saldo").textContent = `$${saldoPendiente.toLocaleString()}`;
+    document.getElementById("resumen-total").textContent = `$${totalEstimado.toLocaleString("es-CO")}`;
+    document.getElementById("resumen-abonado-real").textContent = `$${abonoRealAplicado.toLocaleString("es-CO")}`;
+    document.getElementById("resumen-saldo").textContent = `$${saldoPendiente.toLocaleString("es-CO")}`;
 
     const boxDevuelta = document.getElementById("box-devuelta-checkin");
     const txtDevuelta = document.getElementById("resumen-devuelta");
@@ -389,7 +388,7 @@ function recalcularResumenCheckin() {
     if (devuelta > 0) {
         boxDevuelta.className = "bg-google-yellowLight border border-amber-300 rounded-xl p-3 text-center transition";
         txtDevuelta.className = "font-display text-lg font-bold text-amber-800";
-        txtDevuelta.textContent = `$${devuelta.toLocaleString()}`;
+        txtDevuelta.textContent = `$${devuelta.toLocaleString("es-CO")}`;
     } else {
         boxDevuelta.className = "bg-google-surface border border-google-border rounded-xl p-3 text-center transition";
         txtDevuelta.className = "font-display text-lg font-bold text-google-textSec";
@@ -414,9 +413,8 @@ async function enviarFormularioCheckin(e) {
         });
     });
 
-    // Consolidar pagos recibidos (lista + valor escrito directamente sin presionar "+ Agregar")
     const pagosFinales = [...pagosInicialesCheckin];
-    const montoDirecto = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+    const montoDirecto = leerMoneda("checkin-monto-recibido");
     if (montoDirecto > 0) {
         pagosFinales.push({
             metodo_pago: document.getElementById("checkin-metodo-pago").value,
@@ -424,7 +422,6 @@ async function enviarFormularioCheckin(e) {
         });
     }
 
-    // Calcular montos netos descontando devuelta para no registrar dinero devuelto en caja
     const { totalEstimado } = calcularTotalEstadiaActual();
     let restantePorCubrir = totalEstimado;
     const pagosNetos = [];
@@ -458,11 +455,11 @@ async function enviarFormularioCheckin(e) {
         grupo_id: document.getElementById("checkin-grupo").value || null,
         numero_personas: 1 + acompanantes.length,
         tarifa_descripcion: opcionTarifa ? opcionTarifa.dataset.descripcion : "Tarifa Personalizada",
-        precio_noche: parseFloat(document.getElementById("checkin-precio-noche").value),
+        precio_noche: leerMoneda("checkin-precio-noche"),
         es_tarifa_manual: document.getElementById("checkin-tarifa-manual").checked,
         fecha_salida: (!estadiaAbiertaActiva && fechaSalidaVal) ? `${fechaSalidaVal}T13:00:00` : null,
         es_estadia_abierta: estadiaAbiertaActiva,
-        recargo_adicional: parseFloat(document.getElementById("checkin-recargo").value) || 0,
+        recargo_adicional: leerMoneda("checkin-recargo"),
         abono_inicial: primerPago.monto,
         metodo_pago_abono: primerPago.metodo_pago
     };
@@ -482,7 +479,6 @@ async function enviarFormularioCheckin(e) {
 
         const reservaCreada = await res.json();
 
-        // Si hubo un segundo método de pago en el ingreso (ej: parte Nequi y parte Efectivo), registrarlo
         for (const extra of pagosAdicionales) {
             await fetch(`${API_URL}/pagos`, {
                 method: "POST",

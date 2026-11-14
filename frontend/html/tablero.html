@@ -36,7 +36,8 @@
                 <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Mantenimiento</p>
                 <p id="stat-mantenimiento" class="font-display text-2xl font-bold text-google-yellow mt-1">0</p>
             </div>
-            <div class="w-10 h-10 rounded-full bg-google-yellowLight text-google-yellow flex items-center justify-center">
+            <div
+                class="w-10 h-10 rounded-full bg-google-yellowLight text-google-yellow flex items-center justify-center">
                 <span class="material-symbols-rounded filled">build</span>
             </div>
         </div>
@@ -45,12 +46,18 @@
     <!-- Filtros rápidos -->
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div class="flex flex-wrap gap-2" id="filtros-estado">
-            <button data-filtro="TODAS" class="chip-filtro bg-google-blueLight text-google-blue border border-google-blue/20 text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Todas (15)</button>
-            <button data-filtro="Disponible" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Disponibles</button>
-            <button data-filtro="Ocupada" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Ocupadas</button>
-            <button data-filtro="Mantenimiento" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Mantenimiento</button>
+            <button data-filtro="TODAS"
+                class="chip-filtro bg-google-blueLight text-google-blue border border-google-blue/20 text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Todas
+                (15)</button>
+            <button data-filtro="Disponible"
+                class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Disponibles</button>
+            <button data-filtro="Ocupada"
+                class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Ocupadas</button>
+            <button data-filtro="Mantenimiento"
+                class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Mantenimiento</button>
         </div>
-        <button id="btn-ir-checkin" class="flex items-center gap-1.5 bg-google-blue hover:bg-google-blueHover text-white text-xs font-medium px-4 py-2 rounded-full shadow-sm transition">
+        <button id="btn-ir-checkin"
+            class="flex items-center gap-1.5 bg-google-blue hover:bg-google-blueHover text-white text-xs font-medium px-4 py-2 rounded-full shadow-sm transition">
             <span class="material-symbols-rounded text-base">add</span>
             Nuevo Check-in
         </button>
@@ -60,7 +67,8 @@
     <section class="mb-8">
         <div class="flex items-center gap-2 mb-3">
             <span class="material-symbols-rounded text-google-blue text-lg">layers</span>
-            <h2 class="font-display text-base font-semibold text-google-text">Primer Piso <span class="text-xs font-normal text-google-textSec">(Habitaciones 101 – 107)</span></h2>
+            <h2 class="font-display text-base font-semibold text-google-text">Primer Piso <span
+                    class="text-xs font-normal text-google-textSec">(Habitaciones 101 – 107)</span></h2>
         </div>
         <div id="grid-piso-1" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
     </section>
@@ -69,33 +77,39 @@
     <section>
         <div class="flex items-center gap-2 mb-3">
             <span class="material-symbols-rounded text-google-blue text-lg">layers</span>
-            <h2 class="font-display text-base font-semibold text-google-text">Segundo Piso <span class="text-xs font-normal text-google-textSec">(Habitaciones 201 – 208)</span></h2>
+            <h2 class="font-display text-base font-semibold text-google-text">Segundo Piso <span
+                    class="text-xs font-normal text-google-textSec">(Habitaciones 201 – 208)</span></h2>
         </div>
         <div id="grid-piso-2" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
     </section>
 </div>
 
 <!-- MODAL: GESTIÓN DE HABITACIÓN OCUPADA -->
-<div id="modal-ocupada" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
-    <div class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-xl border border-google-border max-h-[90vh] overflow-y-auto">
+<div id="modal-ocupada"
+    class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+    <div
+        class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-xl border border-google-border max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between pb-4 border-b border-google-border">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-google-redLight text-google-red flex items-center justify-center">
                     <span class="material-symbols-rounded">door_front</span>
                 </div>
                 <div>
-                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="modal-hab-num" class="text-google-red"></span></h3>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="modal-hab-num"
+                            class="text-google-red"></span></h3>
                     <p id="modal-huesped-info" class="text-xs text-google-textSec"></p>
                 </div>
             </div>
-            <button id="btn-cerrar-modal-ocupada" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+            <button id="btn-cerrar-modal-ocupada"
+                class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
 
         <!-- LISTA DE OCUPANTES (TITULAR DE PRIMERA + ACOMPAÑANTES) -->
         <div class="mt-4 bg-google-bg border border-google-border rounded-2xl p-4">
-            <h4 class="text-xs font-semibold text-google-textSec uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <h4
+                class="text-xs font-semibold text-google-textSec uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                 <span class="material-symbols-rounded text-base text-google-blue">badge</span>
                 Ocupantes Registrados en la Habitación
             </h4>
@@ -104,16 +118,24 @@
 
         <!-- Pestañas del Modal -->
         <div class="flex gap-2 my-4 border-b border-google-border pb-2">
-            <button data-tab="tab-cuenta" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-google-blueLight text-google-blue">Estado de Cuenta</button>
-            <button data-tab="tab-abono" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Registrar Abono</button>
-            <button data-tab="tab-consumo" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Tienda / Lavandería</button>
+            <button data-tab="tab-cuenta"
+                class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-google-blueLight text-google-blue">Estado
+                de Cuenta</button>
+            <button data-tab="tab-abono"
+                class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Registrar
+                Abono</button>
+            <button data-tab="tab-consumo"
+                class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Tienda
+                / Lavandería</button>
         </div>
 
         <!-- TAB 1: ESTADO DE CUENTA Y CHECK-OUT -->
         <div id="tab-cuenta" class="tab-panel space-y-4">
-            <div id="liquidacion-detalle" class="bg-google-bg rounded-2xl p-4 border border-google-border space-y-2 text-sm"></div>
+            <div id="liquidacion-detalle"
+                class="bg-google-bg rounded-2xl p-4 border border-google-border space-y-2 text-sm"></div>
             <div class="flex justify-end gap-2 pt-2">
-                <button type="button" id="btn-ejecutar-checkout" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+                <button type="button" id="btn-ejecutar-checkout"
+                    class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
                     <span class="material-symbols-rounded text-base">receipt_long</span>
                     Liquidar y Hacer Check-Out
                 </button>
@@ -125,7 +147,8 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-google-textSec mb-1">Monto a Abonar ($) *</label>
-                    <input type="number" id="abono-monto" required min="1000" step="1000" placeholder="Ej: 50000" class="google-input">
+                    <input type="text" inputmode="numeric" id="abono-monto" required placeholder="Ej: 50.000"
+                        class="google-input">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-google-textSec mb-1">Método de Pago *</label>
@@ -142,7 +165,9 @@
                 <input type="text" id="abono-obs" placeholder="Ej: Abono segunda noche" class="google-input">
             </div>
             <div class="flex justify-end">
-                <button type="submit" class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Guardar Abono</button>
+                <button type="submit"
+                    class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Guardar
+                    Abono</button>
             </div>
         </form>
 
@@ -163,47 +188,59 @@
                 <span class="text-xs text-google-text">Registrar como cortesía del hotel ($0)</span>
             </label>
             <div class="flex justify-end">
-                <button type="submit" class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Cargar a la Habitación</button>
+                <button type="submit"
+                    class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Cargar
+                    a la Habitación</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- MODAL: GESTIÓN DE MANTENIMIENTO Y ASEO -->
-<div id="modal-mantenimiento" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+<div id="modal-mantenimiento"
+    class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
     <div class="bg-google-surface rounded-3xl max-w-md w-full p-6 shadow-xl border border-google-border">
         <div class="flex items-center justify-between pb-4 border-b border-google-border">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-google-yellowLight text-amber-700 flex items-center justify-center">
+                <div
+                    class="w-10 h-10 rounded-full bg-google-yellowLight text-amber-700 flex items-center justify-center">
                     <span class="material-symbols-rounded filled">cleaning_services</span>
                 </div>
                 <div>
-                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="mant-hab-num" class="text-amber-700"></span></h3>
-                    <p id="mant-estado-subtitulo" class="text-xs text-google-textSec">Control de aseo y mantenimiento</p>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="mant-hab-num"
+                            class="text-amber-700"></span></h3>
+                    <p id="mant-estado-subtitulo" class="text-xs text-google-textSec">Control de aseo y mantenimiento
+                    </p>
                 </div>
             </div>
-            <button id="btn-cerrar-modal-mant" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+            <button id="btn-cerrar-modal-mant"
+                class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
 
         <div class="my-5 space-y-4">
-            <div id="mant-box-actual" class="bg-google-yellowLight/60 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-950">
+            <div id="mant-box-actual"
+                class="bg-google-yellowLight/60 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-950">
                 <span class="font-semibold block mb-0.5">Estado / Motivo actual:</span>
                 <p id="mant-motivo-actual">Pendiente aseo y cambio de sábanas</p>
             </div>
 
             <div id="mant-form-motivo">
-                <label class="block text-xs font-medium text-google-textSec mb-1">Observación de mantenimiento / aseo</label>
-                <input type="text" id="mant-input-observacion" placeholder="Ej: Cambio de sábanas, revisión aire..." class="google-input">
+                <label class="block text-xs font-medium text-google-textSec mb-1">Observación de mantenimiento /
+                    aseo</label>
+                <input type="text" id="mant-input-observacion" placeholder="Ej: Cambio de sábanas, revisión aire..."
+                    class="google-input">
             </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
-            <button type="button" id="btn-cancelar-mant" class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-bg transition">
+            <button type="button" id="btn-cancelar-mant"
+                class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-bg transition">
                 Cancelar
             </button>
-            <button type="button" id="btn-confirmar-mant" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+            <button type="button" id="btn-confirmar-mant"
+                class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
                 <span class="material-symbols-rounded text-base">check_circle</span>
                 Marcar como Disponible
             </button>
@@ -212,20 +249,25 @@
 </div>
 
 <!-- MODAL: CAJA Y LIQUIDACIÓN DE CHECK-OUT (PAGOS MIXTOS) -->
-<div id="modal-checkout-pago" class="fixed inset-0 bg-black/50 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
-    <div class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-google-border max-h-[92vh] overflow-y-auto">
+<div id="modal-checkout-pago"
+    class="fixed inset-0 bg-black/50 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+    <div
+        class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-google-border max-h-[92vh] overflow-y-auto">
         <!-- Encabezado -->
         <div class="flex items-center justify-between pb-4 border-b border-google-border">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-google-greenLight text-google-green flex items-center justify-center">
+                <div
+                    class="w-10 h-10 rounded-full bg-google-greenLight text-google-green flex items-center justify-center">
                     <span class="material-symbols-rounded filled">point_of_sale</span>
                 </div>
                 <div>
-                    <h3 class="font-display text-lg font-semibold text-google-text">Caja y Liquidación — Habitación <span id="chk-hab-num" class="text-google-blue"></span></h3>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Caja y Liquidación — Habitación
+                        <span id="chk-hab-num" class="text-google-blue"></span></h3>
                     <p id="chk-cliente-info" class="text-xs text-google-textSec"></p>
                 </div>
             </div>
-            <button id="btn-cerrar-modal-chk" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+            <button id="btn-cerrar-modal-chk"
+                class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
@@ -235,7 +277,8 @@
             <div class="bg-google-bg border border-google-border rounded-2xl p-3.5">
                 <span class="text-google-textSec block mb-1">Alojamiento + Recargos</span>
                 <strong id="chk-total-alojamiento" class="font-display text-base text-google-text">$0</strong>
-                <span id="chk-abonos-previos" class="block text-[11px] text-google-green mt-0.5">Abonado previo: $0</span>
+                <span id="chk-abonos-previos" class="block text-[11px] text-google-green mt-0.5">Abonado previo:
+                    $0</span>
             </div>
             <div class="bg-google-bg border border-google-border rounded-2xl p-3.5">
                 <span class="text-google-textSec block mb-1">Tienda y Lavandería</span>
@@ -256,12 +299,14 @@
                     <span class="material-symbols-rounded text-base text-google-blue">payments</span>
                     Registrar Formas de Pago del Cierre
                 </h4>
-                <button type="button" id="btn-chk-autocompletar" class="text-xs text-google-blue hover:bg-google-blueLight px-2.5 py-1 rounded-lg font-medium transition">
+                <button type="button" id="btn-chk-autocompletar"
+                    class="text-xs text-google-blue hover:bg-google-blueLight px-2.5 py-1 rounded-lg font-medium transition">
                     + Completar saldo restante
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-google-bg p-3 rounded-2xl border border-google-border">
+            <div
+                class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-google-bg p-3 rounded-2xl border border-google-border">
                 <div class="sm:col-span-4">
                     <label class="block text-[11px] font-medium text-google-textSec mb-1">Concepto</label>
                     <select id="chk-pago-concepto" class="google-input text-xs">
@@ -282,8 +327,11 @@
                 <div class="sm:col-span-4">
                     <label class="block text-[11px] font-medium text-google-textSec mb-1">Monto ($)</label>
                     <div class="flex gap-1.5">
-                        <input type="number" id="chk-pago-monto" min="100" step="500" placeholder="Ej: 40000" class="google-input text-xs">
-                        <button type="button" id="btn-chk-agregar-pago" class="bg-google-blue hover:bg-google-blueHover text-white px-3 rounded-lg text-xs font-medium flex items-center justify-center shrink-0 transition" title="Agregar pago">
+                        <input type="text" inputmode="numeric" id="chk-pago-monto" placeholder="Ej: 40.000"
+                            class="google-input text-xs">
+                        <button type="button" id="btn-chk-agregar-pago"
+                            class="bg-google-blue hover:bg-google-blueHover text-white px-3 rounded-lg text-xs font-medium flex items-center justify-center shrink-0 transition"
+                            title="Agregar pago">
                             <span class="material-symbols-rounded text-base">add</span>
                         </button>
                     </div>
@@ -295,16 +343,20 @@
         </div>
 
         <!-- Barra de cuadre final -->
-        <div class="mt-5 bg-google-bg border border-google-border rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 text-xs">
+        <div
+            class="mt-5 bg-google-bg border border-google-border rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 text-xs">
             <div>
-                <p class="text-google-textSec">Total registrado en este cierre: <strong id="chk-total-ingresado" class="text-google-green text-sm">$0</strong></p>
+                <p class="text-google-textSec">Total registrado en este cierre: <strong id="chk-total-ingresado"
+                        class="text-google-green text-sm">$0</strong></p>
                 <p id="chk-estado-cuadre" class="text-google-red font-medium mt-0.5">Falta por cubrir: $0</p>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" id="btn-cancelar-chk" class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-surface border border-transparent hover:border-google-border transition">
+                <button type="button" id="btn-cancelar-chk"
+                    class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-surface border border-transparent hover:border-google-border transition">
                     Volver
                 </button>
-                <button type="button" id="btn-confirmar-chk-final" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+                <button type="button" id="btn-confirmar-chk-final"
+                    class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
                     <span class="material-symbols-rounded text-base">check_circle</span>
                     Confirmar Pago y Hacer Check-Out
                 </button>

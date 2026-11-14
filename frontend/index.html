@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Mi Pueblo - PMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0" />
+    <script>
+        // Aplicar tema guardado antes de pintar la página para evitar parpadeo blanco
+        (function () {
+            const tema = localStorage.getItem("hotel_tema") || "system";
+            const prefiereOscuro = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (tema === "dark" || (tema === "system" && prefiereOscuro)) {
+                document.documentElement.classList.add("dark");
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -19,32 +34,87 @@
                     },
                     colors: {
                         google: {
-                            blue: '#1a73e8',
-                            blueHover: '#1557b0',
-                            blueLight: '#e8f0fe',
-                            green: '#1e8e3e',
-                            greenLight: '#e6f4ea',
-                            red: '#d93025',
-                            redLight: '#fce8e6',
-                            yellow: '#f9ab00',
-                            yellowLight: '#fef7e0',
-                            bg: '#f8f9fa',
-                            surface: '#ffffff',
-                            border: '#dadce0',
-                            text: '#202124',
-                            textSec: '#5f6368'
+                            blue: 'var(--google-blue)',
+                            blueHover: 'var(--google-blueHover)',
+                            blueLight: 'var(--google-blueLight)',
+                            green: 'var(--google-green)',
+                            greenLight: 'var(--google-greenLight)',
+                            red: 'var(--google-red)',
+                            redLight: 'var(--google-redLight)',
+                            yellow: 'var(--google-yellow)',
+                            yellowLight: 'var(--google-yellowLight)',
+                            bg: 'var(--google-bg)',
+                            surface: 'var(--google-surface)',
+                            border: 'var(--google-border)',
+                            text: 'var(--google-text)',
+                            textSec: 'var(--google-textSec)'
                         }
                     }
                 }
             }
         }
     </script>
+    <style>
+        :root {
+            --google-bg: #f8f9fa;
+            --google-surface: #ffffff;
+            --google-border: #dadce0;
+            --google-text: #202124;
+            --google-textSec: #5f6368;
+            --google-blue: #1a73e8;
+            --google-blueHover: #1557b0;
+            --google-blueLight: #e8f0fe;
+            --google-green: #1e8e3e;
+            --google-greenLight: #e6f4ea;
+            --google-red: #d93025;
+            --google-redLight: #fce8e6;
+            --google-yellow: #f9ab00;
+            --google-yellowLight: #fef7e0;
+        }
+
+        html.dark {
+            color-scheme: dark;
+            --google-bg: #131314;
+            --google-surface: #1e1f20;
+            --google-border: #333537;
+            --google-text: #e3e3e3;
+            --google-textSec: #9aa0a6;
+
+            /* Azul vivo y destacado para botones y pestañas activas en modo oscuro */
+            --google-blue: #1a73e8;
+            --google-blueHover: #4285f4;
+            --google-blueLight: rgba(26, 115, 232, 0.24);
+
+            --google-green: #81c995;
+            --google-greenLight: rgba(129, 201, 149, 0.16);
+            --google-red: #f28b82;
+            --google-redLight: rgba(242, 139, 130, 0.16);
+            --google-yellow: #fdd663;
+            --google-yellowLight: rgba(253, 214, 99, 0.16);
+        }
+
+        body {
+            background-color: var(--google-bg);
+            color: var(--google-text);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        html.dark .google-input,
+        html.dark select,
+        html.dark input {
+            background-color: #131314;
+            color: var(--google-text);
+            border-color: var(--google-border);
+        }
+    </style>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body class="min-h-screen font-sans antialiased">
 
     <!-- App Bar superior estilo Google Workspace -->
-    <header class="bg-google-surface border-b border-google-border sticky top-0 z-40 px-6 py-2.5 flex flex-wrap justify-between items-center gap-4">
+    <header
+        class="bg-google-surface border-b border-google-border sticky top-0 z-40 px-6 py-2.5 flex flex-wrap justify-between items-center gap-4">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-google-blueLight text-google-blue flex items-center justify-center">
                 <span class="material-symbols-rounded filled text-2xl">apartment</span>
@@ -57,30 +127,38 @@
 
         <!-- Navegación principal -->
         <nav class="flex flex-wrap items-center bg-google-bg p-1 rounded-full border border-google-border gap-1">
-            <button data-vista="tablero" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-google-surface text-google-blue shadow-sm transition">
+            <button data-vista="tablero"
+                class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-google-surface text-google-blue shadow-sm transition">
                 <span class="material-symbols-rounded text-base">grid_view</span>
                 Mapa por Pisos
             </button>
-            <button data-vista="checkin" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+            <button data-vista="checkin"
+                class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
                 <span class="material-symbols-rounded text-base">person_add</span>
                 Registro de Entrada
             </button>
-            <button data-vista="llegadas" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+            <button data-vista="llegadas"
+                class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
                 <span class="material-symbols-rounded text-base">schedule</span>
                 Registro de Llegadas
             </button>
-            <button data-vista="huespedes" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+            <button data-vista="huespedes"
+                class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
                 <span class="material-symbols-rounded text-base">groups</span>
                 Huéspedes
             </button>
         </nav>
 
         <div class="flex items-center gap-3">
-            <div id="status-api" class="flex items-center gap-2 text-xs font-medium bg-google-bg border border-google-border px-3 py-1.5 rounded-full text-google-textSec">
+            <div id="status-api"
+                class="flex items-center gap-2 text-xs font-medium bg-google-bg border border-google-border px-3 py-1.5 rounded-full text-google-textSec">
                 <span class="w-2 h-2 rounded-full bg-google-yellow animate-pulse"></span> Conectando...
             </div>
-            <button id="btn-refresh" class="w-9 h-9 rounded-full text-google-textSec hover:bg-google-bg flex items-center justify-center transition" title="Actualizar datos">
-                <span class="material-symbols-rounded">refresh</span>
+            <button type="button" id="btn-cambiar-tema"
+                class="h-9 px-3 rounded-full bg-google-bg hover:bg-google-blueLight border border-google-border text-google-textSec hover:text-google-blue flex items-center gap-1.5 text-xs font-medium transition"
+                title="Cambiar tema (Sistema / Claro / Oscuro)">
+                <span id="icono-tema" class="material-symbols-rounded text-lg">contrast</span>
+                <span id="texto-tema" class="hidden sm:inline">Sistema</span>
             </button>
         </div>
     </header>
@@ -90,4 +168,5 @@
 
     <script type="module" src="/static/js/app.js"></script>
 </body>
+
 </html>
