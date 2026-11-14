@@ -210,3 +210,105 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL: CAJA Y LIQUIDACIÓN DE CHECK-OUT (PAGOS MIXTOS) -->
+<div id="modal-checkout-pago" class="fixed inset-0 bg-black/50 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+    <div class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-google-border max-h-[92vh] overflow-y-auto">
+        <!-- Encabezado -->
+        <div class="flex items-center justify-between pb-4 border-b border-google-border">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-google-greenLight text-google-green flex items-center justify-center">
+                    <span class="material-symbols-rounded filled">point_of_sale</span>
+                </div>
+                <div>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Caja y Liquidación — Habitación <span id="chk-hab-num" class="text-google-blue"></span></h3>
+                    <p id="chk-cliente-info" class="text-xs text-google-textSec"></p>
+                </div>
+            </div>
+            <button id="btn-cerrar-modal-chk" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <!-- Desglose de la cuenta -->
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="bg-google-bg border border-google-border rounded-2xl p-3.5">
+                <span class="text-google-textSec block mb-1">Alojamiento + Recargos</span>
+                <strong id="chk-total-alojamiento" class="font-display text-base text-google-text">$0</strong>
+                <span id="chk-abonos-previos" class="block text-[11px] text-google-green mt-0.5">Abonado previo: $0</span>
+            </div>
+            <div class="bg-google-bg border border-google-border rounded-2xl p-3.5">
+                <span class="text-google-textSec block mb-1">Tienda y Lavandería</span>
+                <strong id="chk-total-consumos" class="font-display text-base text-google-text">$0</strong>
+                <span class="block text-[11px] text-google-textSec mt-0.5">Consumos cargados</span>
+            </div>
+            <div class="bg-google-redLight/60 border border-google-red/20 rounded-2xl p-3.5">
+                <span class="text-google-red font-medium block mb-1">Saldo Total a Cobrar</span>
+                <strong id="chk-saldo-objetivo" class="font-display text-lg text-google-red">$0</strong>
+                <span class="block text-[11px] text-google-textSec mt-0.5">Para dejar cuenta en $0</span>
+            </div>
+        </div>
+
+        <!-- Formulario para agregar líneas de pago (Efectivo, Nequi, etc.) -->
+        <div id="chk-seccion-pagos" class="mt-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                <h4 class="text-xs font-semibold text-google-text uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-rounded text-base text-google-blue">payments</span>
+                    Registrar Formas de Pago del Cierre
+                </h4>
+                <button type="button" id="btn-chk-autocompletar" class="text-xs text-google-blue hover:bg-google-blueLight px-2.5 py-1 rounded-lg font-medium transition">
+                    + Completar saldo restante
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-google-bg p-3 rounded-2xl border border-google-border">
+                <div class="sm:col-span-4">
+                    <label class="block text-[11px] font-medium text-google-textSec mb-1">Concepto</label>
+                    <select id="chk-pago-concepto" class="google-input text-xs">
+                        <option value="Liquidación Alojamiento">Alojamiento</option>
+                        <option value="Liquidación Tienda / Lavandería">Tienda / Lavandería</option>
+                        <option value="Liquidación Total Estadía">Total Cuenta</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-4">
+                    <label class="block text-[11px] font-medium text-google-textSec mb-1">Método de Pago</label>
+                    <select id="chk-pago-metodo" class="google-input text-xs">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Nequi">Nequi</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Datafono">Datáfono</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-4">
+                    <label class="block text-[11px] font-medium text-google-textSec mb-1">Monto ($)</label>
+                    <div class="flex gap-1.5">
+                        <input type="number" id="chk-pago-monto" min="100" step="500" placeholder="Ej: 40000" class="google-input text-xs">
+                        <button type="button" id="btn-chk-agregar-pago" class="bg-google-blue hover:bg-google-blueHover text-white px-3 rounded-lg text-xs font-medium flex items-center justify-center shrink-0 transition" title="Agregar pago">
+                            <span class="material-symbols-rounded text-base">add</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de pagos agregados en esta ventana -->
+            <div id="chk-lista-pagos" class="mt-3 space-y-2 text-xs"></div>
+        </div>
+
+        <!-- Barra de cuadre final -->
+        <div class="mt-5 bg-google-bg border border-google-border rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 text-xs">
+            <div>
+                <p class="text-google-textSec">Total registrado en este cierre: <strong id="chk-total-ingresado" class="text-google-green text-sm">$0</strong></p>
+                <p id="chk-estado-cuadre" class="text-google-red font-medium mt-0.5">Falta por cubrir: $0</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-cancelar-chk" class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-surface border border-transparent hover:border-google-border transition">
+                    Volver
+                </button>
+                <button type="button" id="btn-confirmar-chk-final" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+                    <span class="material-symbols-rounded text-base">check_circle</span>
+                    Confirmar Pago y Hacer Check-Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -5,6 +5,7 @@ let filtroActual = "TODAS";
 let reservaSeleccionadaActual = null;
 let liquidacionActual = null;
 let habitacionMantSeleccionada = null;
+let pagosCierreCheckOut = [];
 
 export function inicializarTablero() {
     document.getElementById("btn-ir-checkin").addEventListener("click", () => abrirVistaCheckin());
@@ -19,7 +20,14 @@ export function inicializarTablero() {
     });
     document.getElementById("form-nuevo-abono").addEventListener("submit", registrarAbonoModal);
     document.getElementById("form-nuevo-consumo").addEventListener("submit", registrarConsumoModal);
-    document.getElementById("btn-ejecutar-checkout").addEventListener("click", ejecutarCheckoutFinal);
+    document.getElementById("btn-ejecutar-checkout").addEventListener("click", abrirModalCheckoutPago);
+
+    // Eventos Modal Caja y Liquidación de Check-Out
+    document.getElementById("btn-cerrar-modal-chk").addEventListener("click", cerrarModalCheckoutPago);
+    document.getElementById("btn-cancelar-chk").addEventListener("click", cerrarModalCheckoutPago);
+    document.getElementById("btn-chk-agregar-pago").addEventListener("click", agregarPagoListaCheckout);
+    document.getElementById("btn-chk-autocompletar").addEventListener("click", autocompletarSaldoCheckout);
+    document.getElementById("btn-confirmar-chk-final").addEventListener("click", confirmarCheckoutConPagos);
 
     // Eventos Modal Mantenimiento y Aseo
     document.getElementById("btn-cerrar-modal-mant").addEventListener("click", cerrarModalMantenimiento);
@@ -139,6 +147,194 @@ export function renderizarMapaHabitaciones() {
     document.getElementById("stat-disponibles").textContent = disp;
     document.getElementById("stat-ocupadas").textContent = ocup;
     document.getElementById("stat-mantenimiento").textContent = mant;
+}
+
+// ==============================================================================
+// MODAL DE CAJA Y LIQUIDACIÓN DE CHECK-OUT (PAGOS MIXTOS)
+// ==============================================================================
+function abrirModalCheckoutPago() {
+    if (!reservaSeleccionadaActual || !liquidacionActual) return;
+
+    pagosCierreCheckOut = [];
+    document.getElementById("chk-hab-num").textContent = `#${liquidacionActual.habitacion_numero}`;
+    document.getElementById("chk-cliente-info").textContent =
+        `${liquidacionActual.cliente} • ${reservaSeleccionadaActual.titular.tipo_documento}: ${liquidacionActual.documento}`;
+
+    document.getElementById("chk-total-alojamiento").textContent = `$${liquidacionActual.total_alojamiento.toLocaleString()}`;
+    document.getElementById("chk-abonos-previos").textContent = `Abonado previo: -$${liquidacionActual.total_abonado.toLocaleString()}`;
+    document.getElementById("chk-total-consumos").textContent = `$${liquidacionActual.total_consumos_tienda_lavanderia.toLocaleString()}`;
+    document.getElementById("chk-saldo-objetivo").textContent = `$${liquidacionActual.saldo_pendiente.toLocaleString()}`;
+
+    // Sugerir monto inicial pendiente en el input
+    const saldoPendiente = liquidacionActual.saldo_pendiente;
+    const seccionPagos = document.getElementById("chk-seccion-pagos");
+
+    if (saldoPendiente <= 0) {
+        seccionPagos.classList.add("hidden");
+    } else {
+        seccionPagos.classList.remove("hidden");
+        // Si hay consumos pendientes, sugerir primero el saldo de alojamiento; si no, el total pendiente
+        const saldoAlojamientoSugerido = Math.max(0, liquidacionActual.total_alojamiento - liquidacionActual.total_abonado);
+        if (saldoAlojamientoSugerido > 0 && liquidacionActual.total_consumos_tienda_lavanderia > 0) {
+            document.getElementById("chk-pago-concepto").value = "Liquidación Alojamiento";
+            document.getElementById("chk-pago-monto").value = saldoAlojamientoSugerido;
+        } else {
+            document.getElementById("chk-pago-concepto").value = "Liquidación Total Estadía";
+            document.getElementById("chk-pago-monto").value = saldoPendiente;
+        }
+    }
+
+    renderizarPagosCheckout();
+
+    const modal = document.getElementById("modal-checkout-pago");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function cerrarModalCheckoutPago() {
+    const modal = document.getElementById("modal-checkout-pago");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+}
+
+function agregarPagoListaCheckout() {
+    const concepto = document.getElementById("chk-pago-concepto").value;
+    const metodo = document.getElementById("chk-pago-metodo").value;
+    const monto = parseFloat(document.getElementById("chk-pago-monto").value) || 0;
+
+    if (monto <= 0) {
+        alert("Ingresa un monto válido mayor a $0.");
+        return;
+    }
+
+    pagosCierreCheckOut.push({ concepto, metodo_pago: metodo, monto });
+
+    // Calcular cuánto queda faltando para sugerirlo automáticamente en el siguiente pago
+    const totalIngresado = pagosCierreCheckOut.reduce((acc, p) => acc + p.monto, 0);
+    const restante = Math.max(0, liquidacionActual.saldo_pendiente - totalIngresado);
+
+    document.getElementById("chk-pago-monto").value = restante > 0 ? restante : "";
+    if (restante > 0 && concepto === "Liquidación Alojamiento" && liquidacionActual.total_consumos_tienda_lavanderia > 0) {
+        document.getElementById("chk-pago-concepto").value = "Liquidación Tienda / Lavandería";
+    }
+
+    renderizarPagosCheckout();
+}
+
+function autocompletarSaldoCheckout() {
+    const totalIngresado = pagosCierreCheckOut.reduce((acc, p) => acc + p.monto, 0);
+    const restante = Math.max(0, liquidacionActual.saldo_pendiente - totalIngresado);
+
+    if (restante <= 0) return;
+
+    const concepto = document.getElementById("chk-pago-concepto").value;
+    const metodo = document.getElementById("chk-pago-metodo").value;
+    pagosCierreCheckOut.push({ concepto, metodo_pago: metodo, monto: restante });
+    document.getElementById("chk-pago-monto").value = "";
+    renderizarPagosCheckout();
+}
+
+function renderizarPagosCheckout() {
+    const lista = document.getElementById("chk-lista-pagos");
+    lista.innerHTML = "";
+
+    pagosCierreCheckOut.forEach((pago, index) => {
+        const item = document.createElement("div");
+        item.className = "flex items-center justify-between bg-google-surface border border-google-border rounded-xl px-3.5 py-2";
+        item.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="bg-google-blueLight text-google-blue font-semibold px-2 py-0.5 rounded text-[11px]">${pago.metodo_pago}</span>
+                <span class="text-google-text font-medium">${pago.concepto}</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <strong class="text-google-green">$${pago.monto.toLocaleString()}</strong>
+                <button type="button" class="text-google-textSec hover:text-google-red transition" title="Eliminar pago">
+                    <span class="material-symbols-rounded text-base">delete</span>
+                </button>
+            </div>
+        `;
+        item.querySelector("button").addEventListener("click", () => {
+            pagosCierreCheckOut.splice(index, 1);
+            renderizarPagosCheckout();
+        });
+        lista.appendChild(item);
+    });
+
+    const saldoObjetivo = liquidacionActual ? liquidacionActual.saldo_pendiente : 0;
+    const totalIngresado = pagosCierreCheckOut.reduce((acc, p) => acc + p.monto, 0);
+    const diferencia = saldoObjetivo - totalIngresado;
+
+    document.getElementById("chk-total-ingresado").textContent = `$${totalIngresado.toLocaleString()}`;
+    const estadoCuadre = document.getElementById("chk-estado-cuadre");
+    const btnConfirmar = document.getElementById("btn-confirmar-chk-final");
+
+    if (diferencia > 0) {
+        estadoCuadre.className = "text-google-red font-medium mt-0.5";
+        estadoCuadre.textContent = `Falta por cubrir: $${diferencia.toLocaleString()}`;
+        btnConfirmar.disabled = true;
+    } else if (diferencia < 0) {
+        estadoCuadre.className = "text-amber-700 font-medium mt-0.5";
+        estadoCuadre.textContent = `Cambio / Devuelta al huésped: $${Math.abs(diferencia).toLocaleString()}`;
+        btnConfirmar.disabled = false;
+    } else {
+        estadoCuadre.className = "text-google-green font-medium mt-0.5";
+        estadoCuadre.textContent = "Cuenta cuadrada en $0 • Lista para cerrar";
+        btnConfirmar.disabled = false;
+    }
+}
+
+async function confirmarCheckoutConPagos() {
+    if (!reservaSeleccionadaActual || !liquidacionActual) return;
+
+    const btnConfirmar = document.getElementById("btn-confirmar-chk-final");
+    btnConfirmar.disabled = true;
+
+    try {
+        // 1. Registrar cada forma de pago en /pagos (Efectivo, Nequi, etc.)
+        for (const pago of pagosCierreCheckOut) {
+            const resPago = await fetch(`${API_URL}/pagos`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reserva_id: reservaSeleccionadaActual.id,
+                    monto: pago.monto,
+                    metodo_pago: pago.metodo_pago,
+                    concepto: pago.concepto,
+                    observacion: "Pago de liquidación en Check-out"
+                })
+            });
+            if (!resPago.ok) throw new Error("Error registrando uno de los pagos");
+        }
+
+        // 2. Generar la factura y pasar la habitación a Mantenimiento / Aseo
+        const payloadFactura = {
+            reserva_ids: [reservaSeleccionadaActual.id],
+            tipo_cliente: reservaSeleccionadaActual.empresa ? "Empresa" : "Persona Natural",
+            razon_social_o_nombre: reservaSeleccionadaActual.empresa || liquidacionActual.cliente,
+            tipo_documento: reservaSeleccionadaActual.titular.tipo_documento,
+            documento_numero: liquidacionActual.documento,
+            subtotal: liquidacionActual.total_general,
+            total: liquidacionActual.total_general,
+            total_pagado: liquidacionActual.total_general,
+            saldo_pendiente: 0
+        };
+
+        const resFactura = await fetch(`${API_URL}/facturas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadFactura)
+        });
+
+        if (!resFactura.ok) throw new Error("Error generando el comprobante de Check-out");
+
+        cerrarModalCheckoutPago();
+        cerrarModalOcupada();
+        await cargarDatos();
+        await cargarVista("tablero");
+    } catch (error) {
+        alert(error.message || "Error al procesar el Check-out.");
+        btnConfirmar.disabled = false;
+    }
 }
 
 // ==============================================================================
@@ -360,40 +556,5 @@ async function registrarConsumoModal(e) {
     } else {
         const err = await res.json();
         alert(`Error: ${err.detail}`);
-    }
-}
-
-async function ejecutarCheckoutFinal() {
-    if (!reservaSeleccionadaActual || !liquidacionActual) return;
-
-    const confirmar = confirm(
-        `¿Confirmar Check-out de la habitación #${liquidacionActual.habitacion_numero}?\nSaldo pendiente: $${liquidacionActual.saldo_pendiente.toLocaleString()}\n\nLa habitación pasará automáticamente a Aseo / Mantenimiento.`
-    );
-    if (!confirmar) return;
-
-    const payload = {
-        reserva_ids: [reservaSeleccionadaActual.id],
-        tipo_cliente: reservaSeleccionadaActual.empresa ? "Empresa" : "Persona Natural",
-        razon_social_o_nombre: reservaSeleccionadaActual.empresa || liquidacionActual.cliente,
-        tipo_documento: reservaSeleccionadaActual.titular.tipo_documento,
-        documento_numero: liquidacionActual.documento,
-        subtotal: liquidacionActual.total_general,
-        total: liquidacionActual.total_general,
-        total_pagado: liquidacionActual.total_general,
-        saldo_pendiente: 0
-    };
-
-    const res = await fetch(`${API_URL}/facturas`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    if (res.ok) {
-        cerrarModalOcupada();
-        await cargarDatos();
-        await cargarVista("tablero");
-    } else {
-        alert("Error al generar el Check-out.");
     }
 }
