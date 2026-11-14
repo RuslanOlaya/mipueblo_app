@@ -1,0 +1,30 @@
+<div class="max-w-7xl mx-auto px-6 py-7">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-xl font-bold text-google-text">Registro de Llegadas (Bitácora de Recepción)</h2>
+            <p class="text-xs text-google-textSec">Control cronológico con fecha y hora exacta de ingreso de cada huésped.</p>
+        </div>
+        <div class="w-full sm:w-72">
+            <input type="text" id="buscar-llegada" placeholder="Filtrar por huésped, cédula o hab..." class="google-input">
+        </div>
+    </div>
+
+    <div class="bg-google-surface border border-google-border rounded-2xl overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-google-bg border-b border-google-border text-xs font-medium text-google-textSec uppercase tracking-wider">
+                        <th class="py-3.5 px-4">Fecha y Hora Llegada</th>
+                        <th class="py-3.5 px-4">Hab.</th>
+                        <th class="py-3.5 px-4">Huésped Titular</th>
+                        <th class="py-3.5 px-4">Documento</th>
+                        <th class="py-3.5 px-4">Acompañantes</th>
+                        <th class="py-3.5 px-4">Tarifa / Noche</th>
+                        <th class="py-3.5 px-4">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-llegadas-body" class="divide-y divide-google-border"></tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,178 @@
+<div class="max-w-5xl mx-auto px-6 py-7">
+    <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+            <button id="btn-volver-tablero" class="w-9 h-9 rounded-full hover:bg-google-surface border border-transparent hover:border-google-border flex items-center justify-center text-google-textSec transition" title="Volver al mapa">
+                <span class="material-symbols-rounded">arrow_back</span>
+            </button>
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-rounded filled text-2xl text-google-yellow">concierge</span>
+                <h2 class="font-display text-xl font-bold text-google-blue">Recepción - Registro de Entrada</h2>
+            </div>
+        </div>
+    </div>
+
+    <form id="form-checkin-completo" class="space-y-5">
+        <!-- TARJETA 1: HUÉSPED TITULAR / OCUPANTE 1 -->
+        <div class="bg-google-surface border border-google-border rounded-2xl p-6 shadow-sm">
+            <div class="section-accent-blue mb-5">
+                <h3 class="font-display text-base font-semibold text-google-blue">Información del Huésped / Ocupante 1 (Titular)</h3>
+                <p class="text-xs text-google-textSec">Si el cliente ya visitó el hotel, ingresa su documento y presiona Buscar.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Tipo Documento *</label>
+                    <select id="titular-tipo-doc" class="google-input">
+                        <option value="CC">CC (13) - Cédula Ciudadanía</option>
+                        <option value="CE">CE (22) - Cédula Extranjería</option>
+                        <option value="PA">PA (41) - Pasaporte</option>
+                        <option value="NIT">NIT - Empresa / Jurídica</option>
+                    </select>
+                </div>
+                <div class="md:col-span-5">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Documento de Identidad *</label>
+                    <input type="text" id="titular-documento" required placeholder="Número de identificación" class="google-input">
+                </div>
+                <div class="md:col-span-3 flex items-end">
+                    <button type="button" id="btn-buscar-huesped" class="w-full h-[38px] bg-google-surface hover:bg-google-blueLight text-google-blue border border-google-border font-medium text-sm rounded-lg flex items-center justify-center gap-1.5 transition">
+                        <span class="material-symbols-rounded text-lg">search</span>
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Nombre(s) *</label>
+                    <input type="text" id="titular-nombres" required placeholder="Nombres del ocupante" class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Apellido(s) *</label>
+                    <input type="text" id="titular-apellidos" required placeholder="Apellidos del ocupante" class="google-input">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Número Telefónico Celular</label>
+                    <input type="tel" id="titular-telefono" placeholder="Ej: 310..." class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Ciudad de Procedencia (Opcional)</label>
+                    <input type="text" id="titular-ciudad" placeholder="Ej: Bogotá, Ibagué..." class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Placa Vehículo / Moto (Opcional)</label>
+                    <input type="text" id="titular-placa" placeholder="Ej: ABC-123" class="google-input uppercase">
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR DINÁMICO DE ACOMPAÑANTES -->
+        <div id="contenedor-acompanantes" class="space-y-4"></div>
+
+        <div>
+            <button type="button" id="btn-agregar-acompanante" class="inline-flex items-center gap-1.5 bg-google-surface hover:bg-google-blueLight text-google-blue border border-google-border font-medium text-xs px-4 py-2.5 rounded-lg shadow-xs transition">
+                <span class="material-symbols-rounded text-lg">add</span>
+                Añadir Huésped Acompañante
+            </button>
+        </div>
+
+        <!-- TARJETA 2: DETALLES DE LA ESTADÍA Y HABITACIÓN -->
+        <div class="bg-google-surface border border-google-border rounded-2xl p-6 shadow-sm">
+            <div class="section-accent-blue mb-5 flex flex-wrap justify-between items-center gap-2">
+                <div>
+                    <h3 class="font-display text-base font-semibold text-google-blue">Detalles de la Estadía y Habitación</h3>
+                    <p class="text-xs text-google-textSec">Las tarifas se filtran automáticamente según el equipamiento de la habitación.</p>
+                </div>
+                <span id="badge-ocupantes-total" class="bg-google-blueLight text-google-blue text-xs font-medium px-3 py-1 rounded-full">
+                    1 Ocupante registrado
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Número de Habitación *</label>
+                    <select id="checkin-habitacion" required class="google-input">
+                        <option value="">Seleccione la Habitación...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Tarifa Registrada en Sistema *</label>
+                    <select id="checkin-tarifa-select" disabled required class="google-input">
+                        <option value="">Primero elija una habitación...</option>
+                    </select>
+                </div>
+            </div>
+
+            <label class="inline-flex items-center gap-2 mb-4 cursor-pointer select-none">
+                <input type="checkbox" id="checkin-tarifa-manual" class="w-4 h-4 rounded accent-google-blue">
+                <span class="text-xs font-medium text-google-text">Activar tarifa manual / precio personalizado para esta reserva</span>
+            </label>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Precio por Noche ($) *</label>
+                    <input type="number" id="checkin-precio-noche" readonly required value="0" min="1000" step="1000" class="google-input font-semibold">
+                </div>
+                <div class="md:col-span-5">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Fecha Programada de Salida</label>
+                    <input type="date" id="checkin-fecha-salida" class="google-input">
+                </div>
+                <div class="md:col-span-3 flex items-end">
+                    <button type="button" id="btn-toggle-abierta" class="w-full h-[38px] bg-google-surface hover:bg-google-blueLight text-google-blue border border-google-border font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 transition">
+                        <span class="material-symbols-rounded text-base">all_inclusive</span>
+                        Estadía Abierta
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Empresa / Contratista (Opcional)</label>
+                    <input type="text" id="checkin-empresa" placeholder="Ej: Consorcio Vial, Ecopetrol..." class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Código de Grupo (Para unificar habitaciones)</label>
+                    <input type="text" id="checkin-grupo" placeholder="Ej: CUADRILLA-NORTE" class="google-input uppercase">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Valor Adicional / Recargos ($)</label>
+                    <input type="number" id="checkin-recargo" value="0" min="0" step="1000" class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Pagado / Abono Inicial ($)</label>
+                    <input type="number" id="checkin-abono" value="0" min="0" step="1000" class="google-input">
+                </div>
+                <div id="grupo-metodo-pago" class="opacity-50 pointer-events-none transition">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Método de Pago del Abono</label>
+                    <select id="checkin-metodo-pago" class="google-input">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Nequi">Nequi</option>
+                        <option value="Transferencia">Transferencia Bancaria</option>
+                        <option value="Datafono">Datáfono / Tarjeta</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-google-bg border border-google-border rounded-xl p-4 flex flex-wrap justify-between items-center gap-4 text-xs">
+                <div class="space-y-1">
+                    <p class="text-google-textSec">Duración calculada: <strong id="resumen-noches" class="text-google-text">1 noche (Cobro diario)</strong></p>
+                    <p class="text-google-textSec">Total estimado estadía + recargos: <strong id="resumen-total" class="text-google-text">$0</strong></p>
+                </div>
+                <div class="text-right">
+                    <span class="block text-google-textSec">Saldo pendiente al ingreso</span>
+                    <span id="resumen-saldo" class="font-display text-lg font-bold text-google-red">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-google-blue hover:bg-google-blueHover text-white font-display font-semibold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition">
+            <span class="material-symbols-rounded">check_circle</span>
+            Confirmar Check-In y Ocupar Habitación
+        </button>
+    </form>
+</div>

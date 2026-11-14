@@ -1,0 +1,29 @@
+<div class="max-w-7xl mx-auto px-6 py-7">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-xl font-bold text-google-text">Base de Datos de Huéspedes</h2>
+            <p class="text-xs text-google-textSec">Historial de todas las personas que se han hospedado en Hotel Mi Pueblo.</p>
+        </div>
+        <div class="w-full sm:w-80">
+            <input type="text" id="buscar-directorio-huesped" placeholder="Buscar por nombre, cédula, ciudad o placa..." class="google-input">
+        </div>
+    </div>
+
+    <div class="bg-google-surface border border-google-border rounded-2xl overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-google-bg border-b border-google-border text-xs font-medium text-google-textSec uppercase tracking-wider">
+                        <th class="py-3.5 px-4">Nombre Completo</th>
+                        <th class="py-3.5 px-4">Documento</th>
+                        <th class="py-3.5 px-4">Teléfono</th>
+                        <th class="py-3.5 px-4">Ciudad Procedencia</th>
+                        <th class="py-3.5 px-4">Vehículo / Placa</th>
+                        <th class="py-3.5 px-4">Primer Registro</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-huespedes-body" class="divide-y divide-google-border"></tbody>
+            </table>
+        </div>
+    </div>
+</div>

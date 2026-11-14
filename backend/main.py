@@ -173,6 +173,57 @@ def buscar_huesped_por_documento(documento: str, db: Session = Depends(get_db)):
         )
     return huesped
 
+@app.get("/huespedes", response_model=List[schemas.HuespedResponse])
+def listar_todos_los_huespedes(db: Session = Depends(get_db)):
+    """Lista el directorio histórico completo de huéspedes registrados en el hotel."""
+    return (
+        db.query(models.Huesped)
+        .order_by(models.Huesped.fecha_registro.desc())
+        .all()
+    )
+
+
+@app.get("/reservas/historial")
+def listar_registro_llegadas(db: Session = Depends(get_db)):
+    """Devuelve la bitácora cronológica de llegadas (activas e históricas) con hora exacta."""
+    reservas = (
+        db.query(models.Reserva)
+        .order_by(models.Reserva.fecha_ingreso.desc())
+        .all()
+    )
+    resultado = []
+    for r in reservas:
+        resultado.append({
+            "id": r.id,
+            "habitacion_numero": r.habitacion.numero,
+            "fecha_ingreso": r.fecha_ingreso,
+            "fecha_salida": r.fecha_salida,
+            "es_estadia_abierta": r.es_estadia_abierta,
+            "activa": r.activa,
+            "empresa": r.empresa,
+            "grupo_id": r.grupo_id,
+            "numero_personas": r.numero_personas,
+            "precio_noche": r.precio_noche,
+            "titular": {
+                "tipo_documento": r.titular.tipo_documento,
+                "documento": r.titular.documento,
+                "nombres": r.titular.nombres,
+                "apellidos": r.titular.apellidos,
+                "telefono": r.titular.telefono,
+            },
+            "acompanantes": [
+                {
+                    "tipo_documento": a.tipo_documento,
+                    "documento": a.documento,
+                    "nombres": a.nombres,
+                    "apellidos": a.apellidos,
+                    "telefono": a.telefono,
+                }
+                for a in r.acompanantes
+            ],
+        })
+    return resultado
+
 
 # ==============================================================================
 # ENDPOINTS: RESERVAS / HOSPEDAJES (Check-in, Check-out, Liquidación)

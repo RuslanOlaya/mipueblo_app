@@ -43,172 +43,51 @@
 </head>
 <body class="min-h-screen font-sans antialiased">
 
-    <!-- App Bar superior -->
-    <header class="bg-google-surface border-b border-google-border sticky top-0 z-40 px-6 py-3 flex justify-between items-center">
+    <!-- App Bar superior estilo Google Workspace -->
+    <header class="bg-google-surface border-b border-google-border sticky top-0 z-40 px-6 py-2.5 flex flex-wrap justify-between items-center gap-4">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-google-blueLight text-google-blue flex items-center justify-center">
                 <span class="material-symbols-rounded filled text-2xl">apartment</span>
             </div>
             <div>
                 <h1 class="font-display text-lg font-semibold text-google-text leading-tight">Hotel Mi Pueblo</h1>
-                <p class="text-xs text-google-textSec">Gestión de Recepción y Alojamiento</p>
+                <p class="text-xs text-google-textSec">Recepción y Control de Alojamiento</p>
             </div>
         </div>
 
+        <!-- Navegación principal -->
+        <nav class="flex flex-wrap items-center bg-google-bg p-1 rounded-full border border-google-border gap-1">
+            <button data-vista="tablero" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-google-surface text-google-blue shadow-sm transition">
+                <span class="material-symbols-rounded text-base">grid_view</span>
+                Mapa por Pisos
+            </button>
+            <button data-vista="checkin" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+                <span class="material-symbols-rounded text-base">person_add</span>
+                Registro de Entrada
+            </button>
+            <button data-vista="llegadas" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+                <span class="material-symbols-rounded text-base">schedule</span>
+                Registro de Llegadas
+            </button>
+            <button data-vista="huespedes" class="nav-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-google-textSec hover:text-google-text transition">
+                <span class="material-symbols-rounded text-base">groups</span>
+                Huéspedes
+            </button>
+        </nav>
+
         <div class="flex items-center gap-3">
-            <div id="status-api" class="flex items-center gap-2 text-xs font-medium bg-google-bg border border-google-border px-3.5 py-1.5 rounded-full text-google-textSec">
+            <div id="status-api" class="flex items-center gap-2 text-xs font-medium bg-google-bg border border-google-border px-3 py-1.5 rounded-full text-google-textSec">
                 <span class="w-2 h-2 rounded-full bg-google-yellow animate-pulse"></span> Conectando...
             </div>
-            <button id="btn-refresh" class="flex items-center gap-1.5 text-sm font-medium text-google-blue hover:bg-google-blueLight px-4 py-2 rounded-full transition">
-                <span class="material-symbols-rounded text-lg">refresh</span>
-                Actualizar
+            <button id="btn-refresh" class="w-9 h-9 rounded-full text-google-textSec hover:bg-google-bg flex items-center justify-center transition" title="Actualizar datos">
+                <span class="material-symbols-rounded">refresh</span>
             </button>
         </div>
     </header>
 
-    <!-- Contenedor Principal -->
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        
-        <!-- KPIs -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-google-surface border border-google-border rounded-2xl p-5 flex items-center justify-between hover:shadow-sm transition">
-                <div>
-                    <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Capacidad Total</p>
-                    <p id="stat-total" class="font-display text-3xl font-bold text-google-text mt-1">15</p>
-                </div>
-                <div class="w-11 h-11 rounded-full bg-google-bg text-google-textSec flex items-center justify-center">
-                    <span class="material-symbols-rounded">meeting_room</span>
-                </div>
-            </div>
+    <!-- Contenedor donde se inyectan tablero.html, checkin.html, llegadas.html y huespedes.html -->
+    <main id="app-contenedor"></main>
 
-            <div class="bg-google-surface border border-google-border rounded-2xl p-5 flex items-center justify-between hover:shadow-sm transition">
-                <div>
-                    <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Disponibles</p>
-                    <p id="stat-disponibles" class="font-display text-3xl font-bold text-google-green mt-1">0</p>
-                </div>
-                <div class="w-11 h-11 rounded-full bg-google-greenLight text-google-green flex items-center justify-center">
-                    <span class="material-symbols-rounded filled">check_circle</span>
-                </div>
-            </div>
-
-            <div class="bg-google-surface border border-google-border rounded-2xl p-5 flex items-center justify-between hover:shadow-sm transition">
-                <div>
-                    <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Ocupadas</p>
-                    <p id="stat-ocupadas" class="font-display text-3xl font-bold text-google-red mt-1">0</p>
-                </div>
-                <div class="w-11 h-11 rounded-full bg-google-redLight text-google-red flex items-center justify-center">
-                    <span class="material-symbols-rounded filled">bed</span>
-                </div>
-            </div>
-
-            <div class="bg-google-surface border border-google-border rounded-2xl p-5 flex items-center justify-between hover:shadow-sm transition">
-                <div>
-                    <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Mantenimiento</p>
-                    <p id="stat-mantenimiento" class="font-display text-3xl font-bold text-google-yellow mt-1">0</p>
-                </div>
-                <div class="w-11 h-11 rounded-full bg-google-yellowLight text-google-yellow flex items-center justify-center">
-                    <span class="material-symbols-rounded filled">build</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Encabezado y Filtros -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-            <h2 class="font-display text-lg font-semibold text-google-text">Inventario de Habitaciones</h2>
-            <div class="flex flex-wrap gap-2" id="filtros-estado">
-                <button data-filtro="TODAS" class="chip-filtro bg-google-blueLight text-google-blue border border-google-blue/20 text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Todas</button>
-                <button data-filtro="Disponible" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Disponibles</button>
-                <button data-filtro="Ocupada" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Ocupadas</button>
-                <button data-filtro="Mantenimiento" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Mantenimiento</button>
-            </div>
-        </div>
-
-        <!-- Grid de Habitaciones -->
-        <section id="grid-habitaciones" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"></section>
-    </main>
-
-    <!-- DIÁLOGO: CHECK-IN -->
-    <div id="modal-checkin" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
-        <div class="bg-google-surface rounded-3xl max-w-md w-full p-6 shadow-xl border border-google-border">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-google-blueLight text-google-blue flex items-center justify-center">
-                    <span class="material-symbols-rounded">person_add</span>
-                </div>
-                <div>
-                    <h3 class="font-display text-lg font-semibold text-google-text">Registrar Check-in</h3>
-                    <p class="text-xs text-google-textSec">Habitación <span id="checkin-hab-num" class="font-semibold text-google-blue"></span></p>
-                </div>
-            </div>
-
-            <form id="form-checkin" class="space-y-4 text-sm">
-                <input type="hidden" id="checkin-hab-id">
-                
-                <div>
-                    <label class="block text-xs font-medium text-google-textSec mb-1">Nombre completo del huésped *</label>
-                    <input type="text" id="checkin-nombre" required placeholder="Ej: Carlos Pérez" class="w-full bg-google-surface border border-google-border rounded-lg px-3.5 py-2.5 text-google-text focus:outline-none focus:border-google-blue focus:ring-1 focus:ring-google-blue transition">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-google-textSec mb-1">Documento (CC/NIT) *</label>
-                        <input type="text" id="checkin-doc" required placeholder="1005..." class="w-full bg-google-surface border border-google-border rounded-lg px-3.5 py-2.5 text-google-text focus:outline-none focus:border-google-blue focus:ring-1 focus:ring-google-blue transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-google-textSec mb-1">Empresa (Opcional)</label>
-                        <input type="text" id="checkin-empresa" placeholder="Contratista S.A." class="w-full bg-google-surface border border-google-border rounded-lg px-3.5 py-2.5 text-google-text focus:outline-none focus:border-google-blue focus:ring-1 focus:ring-google-blue transition">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-google-textSec mb-1">N° Personas *</label>
-                        <input type="number" id="checkin-personas" value="1" min="1" max="4" required class="w-full bg-google-surface border border-google-border rounded-lg px-3.5 py-2.5 text-google-text focus:outline-none focus:border-google-blue focus:ring-1 focus:ring-google-blue transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-google-textSec mb-1">Tarifa por noche ($) *</label>
-                        <input type="number" id="checkin-tarifa" value="50000" step="1000" required class="w-full bg-google-surface border border-google-border rounded-lg px-3.5 py-2.5 text-google-text focus:outline-none focus:border-google-blue focus:ring-1 focus:ring-google-blue transition">
-                    </div>
-                </div>
-
-                <label class="flex items-center gap-2.5 pt-1 cursor-pointer select-none">
-                    <input type="checkbox" id="checkin-abierta" class="w-4 h-4 rounded accent-google-blue">
-                    <span class="text-xs text-google-textSec">Estadía abierta (trabajador sin fecha fija de salida)</span>
-                </label>
-
-                <div class="flex justify-end gap-2 pt-4">
-                    <button type="button" data-close-modal="modal-checkin" class="px-5 py-2 rounded-full text-google-blue hover:bg-google-blueLight font-medium transition">Cancelar</button>
-                    <button type="submit" class="px-6 py-2 rounded-full bg-google-blue hover:bg-google-blueHover text-white font-medium shadow-sm transition">Confirmar ingreso</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- DIÁLOGO: ESTADO DE CUENTA -->
-    <div id="modal-detalle" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
-        <div class="bg-google-surface rounded-3xl max-w-lg w-full p-6 shadow-xl border border-google-border">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-google-redLight text-google-red flex items-center justify-center">
-                        <span class="material-symbols-rounded">receipt_long</span>
-                    </div>
-                    <div>
-                        <h3 class="font-display text-lg font-semibold text-google-text">Estado de Cuenta</h3>
-                        <p class="text-xs text-google-textSec">Habitación <span id="detalle-hab-num" class="font-semibold text-google-red"></span></p>
-                    </div>
-                </div>
-                <button data-close-modal="modal-detalle" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
-
-            <div id="detalle-contenido" class="space-y-3 text-sm"></div>
-
-            <div class="flex justify-end gap-2 pt-5 mt-2">
-                <button type="button" data-close-modal="modal-detalle" class="px-6 py-2 rounded-full bg-google-blue hover:bg-google-blueHover text-white font-medium transition">Listo</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>

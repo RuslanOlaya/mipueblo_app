@@ -1,0 +1,170 @@
+<div class="max-w-7xl mx-auto px-6 py-7">
+    <!-- KPIs -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+        <div class="bg-google-surface border border-google-border rounded-2xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Capacidad Total</p>
+                <p id="stat-total" class="font-display text-2xl font-bold text-google-text mt-1">15</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-google-bg text-google-textSec flex items-center justify-center">
+                <span class="material-symbols-rounded">meeting_room</span>
+            </div>
+        </div>
+
+        <div class="bg-google-surface border border-google-border rounded-2xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Disponibles</p>
+                <p id="stat-disponibles" class="font-display text-2xl font-bold text-google-green mt-1">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-google-greenLight text-google-green flex items-center justify-center">
+                <span class="material-symbols-rounded filled">check_circle</span>
+            </div>
+        </div>
+
+        <div class="bg-google-surface border border-google-border rounded-2xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Ocupadas</p>
+                <p id="stat-ocupadas" class="font-display text-2xl font-bold text-google-red mt-1">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-google-redLight text-google-red flex items-center justify-center">
+                <span class="material-symbols-rounded filled">bed</span>
+            </div>
+        </div>
+
+        <div class="bg-google-surface border border-google-border rounded-2xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-google-textSec uppercase tracking-wider">Mantenimiento</p>
+                <p id="stat-mantenimiento" class="font-display text-2xl font-bold text-google-yellow mt-1">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-google-yellowLight text-google-yellow flex items-center justify-center">
+                <span class="material-symbols-rounded filled">build</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtros rápidos -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex flex-wrap gap-2" id="filtros-estado">
+            <button data-filtro="TODAS" class="chip-filtro bg-google-blueLight text-google-blue border border-google-blue/20 text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Todas (15)</button>
+            <button data-filtro="Disponible" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Disponibles</button>
+            <button data-filtro="Ocupada" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Ocupadas</button>
+            <button data-filtro="Mantenimiento" class="chip-filtro bg-google-surface text-google-textSec border border-google-border hover:bg-google-bg text-xs font-medium px-3.5 py-1.5 rounded-lg transition">Mantenimiento</button>
+        </div>
+        <button id="btn-ir-checkin" class="flex items-center gap-1.5 bg-google-blue hover:bg-google-blueHover text-white text-xs font-medium px-4 py-2 rounded-full shadow-sm transition">
+            <span class="material-symbols-rounded text-base">add</span>
+            Nuevo Check-in
+        </button>
+    </div>
+
+    <!-- PISO 1 -->
+    <section class="mb-8">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-rounded text-google-blue text-lg">layers</span>
+            <h2 class="font-display text-base font-semibold text-google-text">Primer Piso <span class="text-xs font-normal text-google-textSec">(Habitaciones 101 – 107)</span></h2>
+        </div>
+        <div id="grid-piso-1" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- PISO 2 -->
+    <section>
+        <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-rounded text-google-blue text-lg">layers</span>
+            <h2 class="font-display text-base font-semibold text-google-text">Segundo Piso <span class="text-xs font-normal text-google-textSec">(Habitaciones 201 – 208)</span></h2>
+        </div>
+        <div id="grid-piso-2" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    </section>
+</div>
+
+<!-- MODAL: GESTIÓN DE HABITACIÓN OCUPADA -->
+<div id="modal-ocupada" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+    <div class="bg-google-surface rounded-3xl max-w-2xl w-full p-6 shadow-xl border border-google-border max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-google-border">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-google-redLight text-google-red flex items-center justify-center">
+                    <span class="material-symbols-rounded">door_front</span>
+                </div>
+                <div>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="modal-hab-num" class="text-google-red"></span></h3>
+                    <p id="modal-huesped-info" class="text-xs text-google-textSec"></p>
+                </div>
+            </div>
+            <button id="btn-cerrar-modal-ocupada" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <!-- LISTA DE OCUPANTES (TITULAR DE PRIMERA + ACOMPAÑANTES) -->
+        <div class="mt-4 bg-google-bg border border-google-border rounded-2xl p-4">
+            <h4 class="text-xs font-semibold text-google-textSec uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-base text-google-blue">badge</span>
+                Ocupantes Registrados en la Habitación
+            </h4>
+            <div id="modal-lista-ocupantes" class="space-y-2 text-xs"></div>
+        </div>
+
+        <!-- Pestañas del Modal -->
+        <div class="flex gap-2 my-4 border-b border-google-border pb-2">
+            <button data-tab="tab-cuenta" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-google-blueLight text-google-blue">Estado de Cuenta</button>
+            <button data-tab="tab-abono" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Registrar Abono</button>
+            <button data-tab="tab-consumo" class="modal-tab px-3.5 py-1.5 rounded-lg text-xs font-medium text-google-textSec hover:bg-google-bg">Tienda / Lavandería</button>
+        </div>
+
+        <!-- TAB 1: ESTADO DE CUENTA Y CHECK-OUT -->
+        <div id="tab-cuenta" class="tab-panel space-y-4">
+            <div id="liquidacion-detalle" class="bg-google-bg rounded-2xl p-4 border border-google-border space-y-2 text-sm"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="btn-ejecutar-checkout" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+                    <span class="material-symbols-rounded text-base">receipt_long</span>
+                    Liquidar y Hacer Check-Out
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: REGISTRAR ABONO -->
+        <form id="form-nuevo-abono" class="tab-panel hidden space-y-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Monto a Abonar ($) *</label>
+                    <input type="number" id="abono-monto" required min="1000" step="1000" placeholder="Ej: 50000" class="google-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Método de Pago *</label>
+                    <select id="abono-metodo" class="google-input">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Nequi">Nequi</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Datafono">Datáfono</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-google-textSec mb-1">Observación (Opcional)</label>
+                <input type="text" id="abono-obs" placeholder="Ej: Abono segunda noche" class="google-input">
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Guardar Abono</button>
+            </div>
+        </form>
+
+        <!-- TAB 3: CARGAR CONSUMO -->
+        <form id="form-nuevo-consumo" class="tab-panel hidden space-y-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Producto o Servicio *</label>
+                    <select id="consumo-producto" required class="google-input"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-google-textSec mb-1">Cantidad *</label>
+                    <input type="number" id="consumo-cantidad" value="1" min="1" required class="google-input">
+                </div>
+            </div>
+            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="consumo-cortesia" class="w-4 h-4 rounded accent-google-blue">
+                <span class="text-xs text-google-text">Registrar como cortesía del hotel ($0)</span>
+            </label>
+            <div class="flex justify-end">
+                <button type="submit" class="bg-google-blue hover:bg-google-blueHover text-white text-xs font-semibold px-5 py-2.5 rounded-full transition">Cargar a la Habitación</button>
+            </div>
+        </form>
+    </div>
+</div>
