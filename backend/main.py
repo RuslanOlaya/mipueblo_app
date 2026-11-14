@@ -539,7 +539,8 @@ def generar_comprobante_factura(
             .first()
         )
         if habitacion:
-            habitacion.estado = "Disponible"
+            habitacion.estado = "Mantenimiento"
+            habitacion.observacion_estado = "Aseo y cambio de sábanas post Check-out"
 
         # Marcar consumos como liquidados
         for consumo in reserva.consumos:

@@ -4,6 +4,7 @@ import { abrirVistaCheckin } from "./checkin.js";
 let filtroActual = "TODAS";
 let reservaSeleccionadaActual = null;
 let liquidacionActual = null;
+let habitacionMantSeleccionada = null;
 
 export function inicializarTablero() {
     document.getElementById("btn-ir-checkin").addEventListener("click", () => abrirVistaCheckin());
@@ -11,15 +12,19 @@ export function inicializarTablero() {
         btn.addEventListener("click", () => filtrarHabitaciones(btn.dataset.filtro));
     });
 
+    // Eventos Modal Ocupada
     document.getElementById("btn-cerrar-modal-ocupada").addEventListener("click", cerrarModalOcupada);
-
     document.querySelectorAll(".modal-tab").forEach(btn => {
         btn.addEventListener("click", () => cambiarTabModal(btn.dataset.tab));
     });
-
     document.getElementById("form-nuevo-abono").addEventListener("submit", registrarAbonoModal);
     document.getElementById("form-nuevo-consumo").addEventListener("submit", registrarConsumoModal);
     document.getElementById("btn-ejecutar-checkout").addEventListener("click", ejecutarCheckoutFinal);
+
+    // Eventos Modal Mantenimiento y Aseo
+    document.getElementById("btn-cerrar-modal-mant").addEventListener("click", cerrarModalMantenimiento);
+    document.getElementById("btn-cancelar-mant").addEventListener("click", cerrarModalMantenimiento);
+    document.getElementById("btn-confirmar-mant").addEventListener("click", confirmarCambioMantenimiento);
 
     renderizarMapaHabitaciones();
 }
@@ -55,6 +60,7 @@ export function renderizarMapaHabitaciones() {
 
         let pillStyle = "bg-google-greenLight text-google-green";
         let topAccent = "border-t-4 border-t-google-green";
+        let estadoTexto = hab.estado;
 
         if (hab.estado === "Ocupada") {
             pillStyle = "bg-google-redLight text-google-red";
@@ -62,6 +68,7 @@ export function renderizarMapaHabitaciones() {
         } else if (hab.estado === "Mantenimiento") {
             pillStyle = "bg-google-yellowLight text-amber-800";
             topAccent = "border-t-4 border-t-google-yellow";
+            estadoTexto = "Aseo / Mant.";
         }
 
         let climaHtml = "";
@@ -80,7 +87,7 @@ export function renderizarMapaHabitaciones() {
             } else if (hab.estado === "Ocupada" && reservaActiva) {
                 abrirModalHabitacionOcupada(hab, reservaActiva);
             } else {
-                alert(`Habitación ${hab.numero} en mantenimiento: ${hab.observacion_estado || "Sin detalles"}`);
+                abrirModalMantenimiento(hab);
             }
         });
 
@@ -88,22 +95,41 @@ export function renderizarMapaHabitaciones() {
             ? `${reservaActiva.titular.nombres} ${reservaActiva.titular.apellidos}`
             : "";
 
+        let footerHtml = "";
+        if (hab.estado === "Ocupada" && reservaActiva) {
+            footerHtml = `<span class="text-google-text font-medium truncate flex items-center gap-1"><span class="material-symbols-rounded text-base text-google-red">person</span>${nombreHuesped} (${reservaActiva.numero_personas})</span>`;
+        } else if (hab.estado === "Mantenimiento") {
+            footerHtml = `<span class="text-amber-800 font-medium truncate flex items-center gap-1" title="${hab.observacion_estado || ''}"><span class="material-symbols-rounded text-base">cleaning_services</span>${hab.observacion_estado || "En aseo / revisión"}</span>`;
+        } else {
+            footerHtml = `
+                <span class="text-google-blue font-medium flex items-center gap-1">Registrar ingreso <span class="material-symbols-rounded text-sm">arrow_forward</span></span>
+                <button type="button" class="btn-mandar-mant w-7 h-7 rounded-full hover:bg-google-yellowLight text-google-textSec hover:text-amber-800 flex items-center justify-center transition" title="Enviar a Aseo / Mantenimiento">
+                    <span class="material-symbols-rounded text-[16px]">cleaning_services</span>
+                </button>
+            `;
+        }
+
         card.innerHTML = `
             <div>
                 <div class="flex justify-between items-center mb-1.5">
                     <span class="font-display text-2xl font-bold text-google-text">${hab.numero}</span>
-                    <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-full ${pillStyle}">${hab.estado}</span>
+                    <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-full ${pillStyle}">${estadoTexto}</span>
                 </div>
                 <p class="text-xs text-google-textSec mb-3 line-clamp-1" title="${hab.tipo_camas}">${hab.tipo_camas}</p>
                 <div class="flex flex-wrap gap-1.5 mb-3">${climaHtml}</div>
             </div>
-            <div class="pt-2.5 border-t border-google-bg text-xs flex items-center justify-between">
-                ${reservaActiva
-                    ? `<span class="text-google-text font-medium truncate flex items-center gap-1"><span class="material-symbols-rounded text-base text-google-red">person</span>${nombreHuesped} (${reservaActiva.numero_personas})</span>`
-                    : `<span class="text-google-blue font-medium flex items-center gap-1">Registrar ingreso <span class="material-symbols-rounded text-sm">arrow_forward</span></span>`
-                }
+            <div class="pt-2.5 border-t border-google-bg text-xs flex items-center justify-between gap-2">
+                ${footerHtml}
             </div>
         `;
+
+        const btnMandarMant = card.querySelector(".btn-mandar-mant");
+        if (btnMandarMant) {
+            btnMandarMant.addEventListener("click", (e) => {
+                e.stopPropagation();
+                abrirModalMantenimiento(hab);
+            });
+        }
 
         if (hab.piso === 1) gridP1.appendChild(card);
         else gridP2.appendChild(card);
@@ -115,6 +141,71 @@ export function renderizarMapaHabitaciones() {
     document.getElementById("stat-mantenimiento").textContent = mant;
 }
 
+// ==============================================================================
+// MODAL DE MANTENIMIENTO Y ASEO
+// ==============================================================================
+function abrirModalMantenimiento(hab) {
+    habitacionMantSeleccionada = hab;
+    document.getElementById("mant-hab-num").textContent = `#${hab.numero}`;
+
+    const boxActual = document.getElementById("mant-box-actual");
+    const formMotivo = document.getElementById("mant-form-motivo");
+    const btnConfirmar = document.getElementById("btn-confirmar-mant");
+    const inputObs = document.getElementById("mant-input-observacion");
+
+    if (hab.estado === "Mantenimiento") {
+        document.getElementById("mant-estado-subtitulo").textContent = "Habitación en proceso de alistamiento";
+        boxActual.classList.remove("hidden");
+        document.getElementById("mant-motivo-actual").textContent = hab.observacion_estado || "Aseo y cambio de sábanas";
+        formMotivo.classList.add("hidden");
+
+        btnConfirmar.className = "flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition";
+        btnConfirmar.innerHTML = `<span class="material-symbols-rounded text-base">check_circle</span> Aseo Listo — Pasar a Disponible`;
+    } else {
+        document.getElementById("mant-estado-subtitulo").textContent = "Bloquear temporalmente para aseo o reparación";
+        boxActual.classList.add("hidden");
+        formMotivo.classList.remove("hidden");
+        inputObs.value = "Aseo general y cambio de sábanas";
+
+        btnConfirmar.className = "flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition";
+        btnConfirmar.innerHTML = `<span class="material-symbols-rounded text-base">cleaning_services</span> Enviar a Mantenimiento / Aseo`;
+    }
+
+    const modal = document.getElementById("modal-mantenimiento");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function cerrarModalMantenimiento() {
+    const modal = document.getElementById("modal-mantenimiento");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    habitacionMantSeleccionada = null;
+}
+
+async function confirmarCambioMantenimiento() {
+    if (!habitacionMantSeleccionada) return;
+
+    const obs = document.getElementById("mant-input-observacion").value.trim() || "Aseo y cambio de sábanas";
+    const url = `${API_URL}/habitaciones/${habitacionMantSeleccionada.id}/mantenimiento?observacion=${encodeURIComponent(obs)}`;
+
+    try {
+        const res = await fetch(url, { method: "PATCH" });
+        if (!res.ok) {
+            const err = await res.json();
+            alert(`Error: ${err.detail}`);
+            return;
+        }
+        cerrarModalMantenimiento();
+        await cargarDatos();
+    } catch (error) {
+        alert("No se pudo actualizar el estado de la habitación.");
+    }
+}
+
+// ==============================================================================
+// MODAL DE HABITACIÓN OCUPADA (Titular + Acompañantes + Cuenta + Acciones)
+// ==============================================================================
 function cerrarModalOcupada() {
     const modal = document.getElementById("modal-ocupada");
     modal.classList.add("hidden");
@@ -276,7 +367,7 @@ async function ejecutarCheckoutFinal() {
     if (!reservaSeleccionadaActual || !liquidacionActual) return;
 
     const confirmar = confirm(
-        `¿Confirmar Check-out de la habitación #${liquidacionActual.habitacion_numero}?\nSaldo pendiente: $${liquidacionActual.saldo_pendiente.toLocaleString()}`
+        `¿Confirmar Check-out de la habitación #${liquidacionActual.habitacion_numero}?\nSaldo pendiente: $${liquidacionActual.saldo_pendiente.toLocaleString()}\n\nLa habitación pasará automáticamente a Aseo / Mantenimiento.`
     );
     if (!confirmar) return;
 

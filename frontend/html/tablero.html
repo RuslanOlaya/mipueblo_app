@@ -168,3 +168,45 @@
         </form>
     </div>
 </div>
+
+<!-- MODAL: GESTIÓN DE MANTENIMIENTO Y ASEO -->
+<div id="modal-mantenimiento" class="fixed inset-0 bg-black/40 backdrop-blur-[1px] hidden items-center justify-center z-50 p-4">
+    <div class="bg-google-surface rounded-3xl max-w-md w-full p-6 shadow-xl border border-google-border">
+        <div class="flex items-center justify-between pb-4 border-b border-google-border">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-google-yellowLight text-amber-700 flex items-center justify-center">
+                    <span class="material-symbols-rounded filled">cleaning_services</span>
+                </div>
+                <div>
+                    <h3 class="font-display text-lg font-semibold text-google-text">Habitación <span id="mant-hab-num" class="text-amber-700"></span></h3>
+                    <p id="mant-estado-subtitulo" class="text-xs text-google-textSec">Control de aseo y mantenimiento</p>
+                </div>
+            </div>
+            <button id="btn-cerrar-modal-mant" class="w-8 h-8 rounded-full hover:bg-google-bg flex items-center justify-center text-google-textSec">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <div class="my-5 space-y-4">
+            <div id="mant-box-actual" class="bg-google-yellowLight/60 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-950">
+                <span class="font-semibold block mb-0.5">Estado / Motivo actual:</span>
+                <p id="mant-motivo-actual">Pendiente aseo y cambio de sábanas</p>
+            </div>
+
+            <div id="mant-form-motivo">
+                <label class="block text-xs font-medium text-google-textSec mb-1">Observación de mantenimiento / aseo</label>
+                <input type="text" id="mant-input-observacion" placeholder="Ej: Cambio de sábanas, revisión aire..." class="google-input">
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+            <button type="button" id="btn-cancelar-mant" class="px-4 py-2 rounded-full text-xs font-medium text-google-textSec hover:bg-google-bg transition">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-mant" class="flex items-center gap-1.5 bg-google-green hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
+                <span class="material-symbols-rounded text-base">check_circle</span>
+                Marcar como Disponible
+            </button>
+        </div>
+    </div>
+</div>
