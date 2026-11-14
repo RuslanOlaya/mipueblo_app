@@ -90,3 +90,28 @@ export async function cargarVista(nombreVista, callbackPosterior = null) {
 
     if (callbackPosterior) callbackPosterior();
 }
+
+// Convierte un input en campo de moneda con puntos de miles en vivo (ej: 10.000)
+export function activarFormatoMonedaInput(input) {
+    if (!input) return;
+    input.addEventListener("input", () => {
+        const soloDigitos = input.value.replace(/\D/g, "");
+        input.value = soloDigitos ? parseInt(soloDigitos, 10).toLocaleString("es-CO") : "";
+    });
+}
+
+// Lee el valor numérico limpio de un campo formateado con puntos (ej: "10.000" -> 10000)
+export function leerMoneda(idElemento) {
+    const el = document.getElementById(idElemento);
+    if (!el) return 0;
+    const soloDigitos = String(el.value).replace(/\D/g, "");
+    return soloDigitos ? parseFloat(soloDigitos) : 0;
+}
+
+// Asigna un número a un input mostrándolo con puntos de miles
+export function escribirMoneda(idElemento, valor) {
+    const el = document.getElementById(idElemento);
+    if (!el) return;
+    const num = Math.round(Number(valor) || 0);
+    el.value = num > 0 ? num.toLocaleString("es-CO") : (el.readOnly ? "0" : "");
+}

@@ -1,6 +1,7 @@
 import { API_URL, state, cargarDatos, cargarVista } from "./app.js";
 
 let estadiaAbiertaActiva = false;
+let pagosInicialesCheckin = [];
 
 const TARIFAS_SISTEMA = {
     VENTILADOR: [
@@ -23,6 +24,7 @@ const TARIFAS_SISTEMA = {
 
 export function abrirVistaCheckin(habitacionIdPreseleccionada = null) {
     estadiaAbiertaActiva = false;
+    pagosInicialesCheckin = [];
     cargarVista("checkin", () => {
         if (habitacionIdPreseleccionada) {
             document.getElementById("checkin-habitacion").value = habitacionIdPreseleccionada;
@@ -33,6 +35,8 @@ export function abrirVistaCheckin(habitacionIdPreseleccionada = null) {
 
 export function inicializarCheckin() {
     estadiaAbiertaActiva = false;
+    pagosInicialesCheckin = [];
+
     document.getElementById("btn-volver-tablero").addEventListener("click", () => cargarVista("tablero"));
     document.getElementById("btn-buscar-huesped").addEventListener("click", buscarHuespedTitular);
     document.getElementById("btn-agregar-acompanante").addEventListener("click", agregarBloqueAcompanante);
@@ -42,7 +46,12 @@ export function inicializarCheckin() {
     document.getElementById("checkin-tarifa-manual").addEventListener("change", toggleTarifaManual);
     document.getElementById("btn-toggle-abierta").addEventListener("click", toggleEstadiaAbierta);
 
-    ["checkin-precio-noche", "checkin-fecha-salida", "checkin-recargo", "checkin-abono"].forEach(id => {
+    // Eventos de caja y calculadora de devuelta
+    document.getElementById("btn-checkin-agregar-pago").addEventListener("click", agregarPagoInicialCheckin);
+    document.getElementById("btn-checkin-pago-exacto").addEventListener("click", agregarPagoExactoCheckin);
+    document.getElementById("checkin-monto-recibido").addEventListener("input", recalcularResumenCheckin);
+
+    ["checkin-precio-noche", "checkin-fecha-salida", "checkin-recargo"].forEach(id => {
         document.getElementById(id).addEventListener("input", recalcularResumenCheckin);
     });
 
@@ -271,18 +280,13 @@ function toggleEstadiaAbierta() {
     recalcularResumenCheckin();
 }
 
-function recalcularResumenCheckin() {
+// ==============================================================================
+// GESTIÓN DE PAGOS AL INGRESO Y CALCULADORA DE DEVUELTA
+// ==============================================================================
+function calcularTotalEstadiaActual() {
     const precioNoche = parseFloat(document.getElementById("checkin-precio-noche").value) || 0;
     const recargo = parseFloat(document.getElementById("checkin-recargo").value) || 0;
-    const abono = parseFloat(document.getElementById("checkin-abono").value) || 0;
     const fechaSalidaVal = document.getElementById("checkin-fecha-salida").value;
-
-    const grupoMetodo = document.getElementById("grupo-metodo-pago");
-    if (abono > 0) {
-        grupoMetodo.classList.remove("opacity-50", "pointer-events-none");
-    } else {
-        grupoMetodo.classList.add("opacity-50", "pointer-events-none");
-    }
 
     let noches = 1;
     let textoNoches = "1 noche (Cobro diario / Estadía abierta)";
@@ -296,12 +300,101 @@ function recalcularResumenCheckin() {
         textoNoches = `${noches} noche(s) programada(s)`;
     }
 
-    const totalEstimado = (noches * precioNoche) + recargo;
-    const saldo = Math.max(0, totalEstimado - abono);
+    return {
+        noches,
+        textoNoches,
+        totalEstimado: (noches * precioNoche) + recargo
+    };
+}
+
+function agregarPagoInicialCheckin() {
+    const metodo = document.getElementById("checkin-metodo-pago").value;
+    const monto = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+
+    if (monto <= 0) {
+        alert("Ingresa el monto recibido del huésped.");
+        return;
+    }
+
+    pagosInicialesCheckin.push({ metodo_pago: metodo, monto_recibido: monto });
+    document.getElementById("checkin-monto-recibido").value = "";
+    renderizarListaPagosCheckin();
+    recalcularResumenCheckin();
+}
+
+function agregarPagoExactoCheckin() {
+    const { totalEstimado } = calcularTotalEstadiaActual();
+    const yaEntregado = pagosInicialesCheckin.reduce((acc, p) => acc + p.monto_recibido, 0);
+    const faltante = Math.max(0, totalEstimado - yaEntregado);
+
+    if (faltante <= 0) return;
+
+    const metodo = document.getElementById("checkin-metodo-pago").value;
+    pagosInicialesCheckin.push({ metodo_pago: metodo, monto_recibido: faltante });
+    document.getElementById("checkin-monto-recibido").value = "";
+    renderizarListaPagosCheckin();
+    recalcularResumenCheckin();
+}
+
+function renderizarListaPagosCheckin() {
+    const lista = document.getElementById("checkin-lista-pagos");
+    if (!lista) return;
+    lista.innerHTML = "";
+
+    pagosInicialesCheckin.forEach((pago, index) => {
+        const item = document.createElement("div");
+        item.className = "flex items-center justify-between bg-google-surface border border-google-border rounded-xl px-3.5 py-2";
+        item.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="bg-google-blueLight text-google-blue font-semibold px-2 py-0.5 rounded text-[11px]">${pago.metodo_pago}</span>
+                <span class="text-google-text">Dinero recibido al ingreso</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <strong class="text-google-green">$${pago.monto_recibido.toLocaleString()}</strong>
+                <button type="button" class="text-google-textSec hover:text-google-red transition" title="Quitar pago">
+                    <span class="material-symbols-rounded text-base">delete</span>
+                </button>
+            </div>
+        `;
+        item.querySelector("button").addEventListener("click", () => {
+            pagosInicialesCheckin.splice(index, 1);
+            renderizarListaPagosCheckin();
+            recalcularResumenCheckin();
+        });
+        lista.appendChild(item);
+    });
+}
+
+function recalcularResumenCheckin() {
+    const { textoNoches, totalEstimado } = calcularTotalEstadiaActual();
+
+    // Sumar pagos agregados a la lista + lo que el usuario esté escribiendo en vivo en el input
+    const acumuladoLista = pagosInicialesCheckin.reduce((acc, p) => acc + p.monto_recibido, 0);
+    const inputEnVivo = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+    const totalEntregado = acumuladoLista + inputEnVivo;
+
+    // Si entregó más del total, la diferencia es devuelta y el abono real aplicado es el totalEstimado
+    const devuelta = Math.max(0, totalEntregado - totalEstimado);
+    const abonoRealAplicado = Math.min(totalEntregado, totalEstimado);
+    const saldoPendiente = Math.max(0, totalEstimado - abonoRealAplicado);
 
     document.getElementById("resumen-noches").textContent = textoNoches;
     document.getElementById("resumen-total").textContent = `$${totalEstimado.toLocaleString()}`;
-    document.getElementById("resumen-saldo").textContent = `$${saldo.toLocaleString()}`;
+    document.getElementById("resumen-abonado-real").textContent = `$${abonoRealAplicado.toLocaleString()}`;
+    document.getElementById("resumen-saldo").textContent = `$${saldoPendiente.toLocaleString()}`;
+
+    const boxDevuelta = document.getElementById("box-devuelta-checkin");
+    const txtDevuelta = document.getElementById("resumen-devuelta");
+
+    if (devuelta > 0) {
+        boxDevuelta.className = "bg-google-yellowLight border border-amber-300 rounded-xl p-3 text-center transition";
+        txtDevuelta.className = "font-display text-lg font-bold text-amber-800";
+        txtDevuelta.textContent = `$${devuelta.toLocaleString()}`;
+    } else {
+        boxDevuelta.className = "bg-google-surface border border-google-border rounded-xl p-3 text-center transition";
+        txtDevuelta.className = "font-display text-lg font-bold text-google-textSec";
+        txtDevuelta.textContent = "$0";
+    }
 }
 
 async function enviarFormularioCheckin(e) {
@@ -321,6 +414,32 @@ async function enviarFormularioCheckin(e) {
         });
     });
 
+    // Consolidar pagos recibidos (lista + valor escrito directamente sin presionar "+ Agregar")
+    const pagosFinales = [...pagosInicialesCheckin];
+    const montoDirecto = parseFloat(document.getElementById("checkin-monto-recibido").value) || 0;
+    if (montoDirecto > 0) {
+        pagosFinales.push({
+            metodo_pago: document.getElementById("checkin-metodo-pago").value,
+            monto_recibido: montoDirecto
+        });
+    }
+
+    // Calcular montos netos descontando devuelta para no registrar dinero devuelto en caja
+    const { totalEstimado } = calcularTotalEstadiaActual();
+    let restantePorCubrir = totalEstimado;
+    const pagosNetos = [];
+
+    for (const p of pagosFinales) {
+        if (restantePorCubrir <= 0) break;
+        const montoNeto = Math.min(p.monto_recibido, restantePorCubrir);
+        if (montoNeto > 0) {
+            pagosNetos.push({ metodo_pago: p.metodo_pago, monto: montoNeto });
+            restantePorCubrir -= montoNeto;
+        }
+    }
+
+    const primerPago = pagosNetos[0] || { monto: 0, metodo_pago: "Efectivo" };
+    const pagosAdicionales = pagosNetos.slice(1);
     const fechaSalidaVal = document.getElementById("checkin-fecha-salida").value;
 
     const payload = {
@@ -344,8 +463,8 @@ async function enviarFormularioCheckin(e) {
         fecha_salida: (!estadiaAbiertaActiva && fechaSalidaVal) ? `${fechaSalidaVal}T13:00:00` : null,
         es_estadia_abierta: estadiaAbiertaActiva,
         recargo_adicional: parseFloat(document.getElementById("checkin-recargo").value) || 0,
-        abono_inicial: parseFloat(document.getElementById("checkin-abono").value) || 0,
-        metodo_pago_abono: document.getElementById("checkin-metodo-pago").value
+        abono_inicial: primerPago.monto,
+        metodo_pago_abono: primerPago.metodo_pago
     };
 
     try {
@@ -359,6 +478,23 @@ async function enviarFormularioCheckin(e) {
             const err = await res.json();
             alert(`Error en Check-in: ${err.detail}`);
             return;
+        }
+
+        const reservaCreada = await res.json();
+
+        // Si hubo un segundo método de pago en el ingreso (ej: parte Nequi y parte Efectivo), registrarlo
+        for (const extra of pagosAdicionales) {
+            await fetch(`${API_URL}/pagos`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reserva_id: reservaCreada.id,
+                    monto: extra.monto,
+                    metodo_pago: extra.metodo_pago,
+                    concepto: "Abono inicial mixto",
+                    observacion: "Segundo método de pago en Check-in"
+                })
+            });
         }
 
         await cargarDatos();
