@@ -110,7 +110,7 @@ def cambiar_estado_mantenimiento(
 @app.post(
     "/reservas",
     response_model=schemas.ReservaResponse,
-    status_code=status.HTTP_21_CREATED,
+    status_code=status.HTTP_201_CREATED,
 )
 def crear_reserva_checkin(
     reserva: schemas.ReservaCreate, db: Session = Depends(get_db)
@@ -361,3 +361,10 @@ def generar_comprobante_factura(
     db.commit()
     db.refresh(nueva_factura)
     return nueva_factura
+
+@app.get("/")
+def ruta_raiz():
+    return {
+        "mensaje": "¡Servidor del Hotel Mi Pueblo activo!",
+        "documentacion": "http://127.0.0.1:8000/docs",
+    }
