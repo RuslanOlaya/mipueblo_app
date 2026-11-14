@@ -1,5 +1,5 @@
 from .database import Base, SessionLocal, engine
-from .models import Habitacion
+from .models import Habitacion, ProductoServicio
 
 
 def inicializar_base_datos():
@@ -13,36 +13,72 @@ def inicializar_base_datos():
         db.close()
         return
 
-    habitaciones_iniciales = []
-
-    # Habitaciones 01 a 03: 1 Sencilla + 1 Doble | SOLO VENTILADOR
-    for i in range(1, 4):
-        habitaciones_iniciales.append(
-            Habitacion(
-                numero=f"{i:02d}",
-                tipo_camas="1 Cama Sencilla + 1 Cama Doble",
-                tiene_ventilador=True,
-                tiene_aire_acondicionado=False,
-                estado="Disponible",
-            )
-        )
-
-    # Habitación 04: 1 Sencilla + 1 Doble | MIXTA (Ventilador + Aire)
-    habitaciones_iniciales.append(
+    habitaciones_iniciales = [
+        # PISO 1: Habitaciones 101 a 107
         Habitacion(
-            numero="04",
+            numero="101",
+            piso=1,
+            tipo_camas="1 Cama Sencilla + 1 Cama Doble",
+            tiene_ventilador=True,
+            tiene_aire_acondicionado=False,
+            estado="Disponible",
+        ),
+        Habitacion(
+            numero="102",
+            piso=1,
+            tipo_camas="1 Cama Sencilla + 1 Cama Doble",
+            tiene_ventilador=True,
+            tiene_aire_acondicionado=False,
+            estado="Disponible",
+        ),
+        Habitacion(
+            numero="103",
+            piso=1,
             tipo_camas="1 Cama Sencilla + 1 Cama Doble",
             tiene_ventilador=True,
             tiene_aire_acondicionado=True,
             estado="Disponible",
-        )
-    )
+        ),
+        Habitacion(
+            numero="104",
+            piso=1,
+            tipo_camas="1 Cama Sencilla + 1 Cama Doble",
+            tiene_ventilador=True,
+            tiene_aire_acondicionado=False,
+            estado="Disponible",
+        ),
+        Habitacion(
+            numero="105",
+            piso=1,
+            tipo_camas="1 Cama Sencilla + 1 Cama Doble",
+            tiene_ventilador=False,
+            tiene_aire_acondicionado=True,
+            estado="Disponible",
+        ),
+        Habitacion(
+            numero="106",
+            piso=1,
+            tipo_camas="1 Camarote + 1 Cama Doble",
+            tiene_ventilador=False,
+            tiene_aire_acondicionado=True,
+            estado="Disponible",
+        ),
+        Habitacion(
+            numero="107",
+            piso=1,
+            tipo_camas="1 Camarote + 1 Cama Doble",
+            tiene_ventilador=False,
+            tiene_aire_acondicionado=True,
+            estado="Disponible",
+        ),
+    ]
 
-    # Habitaciones 05 a 13 (9 habs): 1 Sencilla + 1 Doble | SOLO AIRE
-    for i in range(5, 14):
+    # PISO 2: Habitaciones 201 a 208 (8 habitaciones con Aire Acondicionado)
+    for num in range(201, 209):
         habitaciones_iniciales.append(
             Habitacion(
-                numero=f"{i:02d}",
+                numero=str(num),
+                piso=2,
                 tipo_camas="1 Cama Sencilla + 1 Cama Doble",
                 tiene_ventilador=False,
                 tiene_aire_acondicionado=True,
@@ -50,22 +86,45 @@ def inicializar_base_datos():
             )
         )
 
-    # Habitaciones 14 y 15 (2 habs): 1 Camarote + 1 Doble | SOLO AIRE
-    for i in range(14, 16):
-        habitaciones_iniciales.append(
-            Habitacion(
-                numero=f"{i:02d}",
-                tipo_camas="1 Camarote + 1 Cama Doble",
-                tiene_ventilador=False,
-                tiene_aire_acondicionado=True,
-                estado="Disponible",
-            )
-        )
+    # Catálogo inicial de Tienda y Lavandería
+    catalogo_inicial = [
+        ProductoServicio(
+            nombre="Botella de Agua 600ml",
+            tipo="Producto",
+            precio_unitario=3000.0,
+            stock=40,
+            activo=True,
+        ),
+        ProductoServicio(
+            nombre="Gaseosa Personal 400ml",
+            tipo="Producto",
+            precio_unitario=4000.0,
+            stock=30,
+            activo=True,
+        ),
+        ProductoServicio(
+            nombre="Cerveza Nacional Lata",
+            tipo="Producto",
+            precio_unitario=5000.0,
+            stock=48,
+            activo=True,
+        ),
+        ProductoServicio(
+            nombre="Servicio de Lavandería (Carga)",
+            tipo="Servicio",
+            precio_unitario=15000.0,
+            stock=0,
+            activo=True,
+        ),
+    ]
 
     db.add_all(habitaciones_iniciales)
+    db.add_all(catalogo_inicial)
     db.commit()
     db.close()
-    print("¡Base de datos cargada correctamente con las 15 habitaciones!")
+    print(
+        "¡Base de datos cargada correctamente con las 15 habitaciones (101-107 y 201-208) y catálogo base!"
+    )
 
 
 if __name__ == "__main__":

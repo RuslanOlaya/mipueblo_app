@@ -14,7 +14,7 @@ from sqlalchemy.orm import relationship
 from .database import Base
 
 # ==============================================================================
-# TABLA INTERMEDIA: FACTURAS Y RESERVAS (Facturación Unificada / Grupal)
+# TABLA INTERMEDIA 1: FACTURAS Y RESERVAS (Facturación Unificada / Grupal)
 # ==============================================================================
 factura_reservas = Table(
     "factura_reservas",
@@ -23,9 +23,19 @@ factura_reservas = Table(
     Column("reserva_id", Integer, ForeignKey("reservas.id"), primary_key=True),
 )
 
+# ==============================================================================
+# TABLA INTERMEDIA 2: RESERVAS Y HUÉSPEDES ACOMPAÑANTES
+# ==============================================================================
+reserva_acompanantes = Table(
+    "reserva_acompanantes",
+    Base.metadata,
+    Column("reserva_id", Integer, ForeignKey("reservas.id"), primary_key=True),
+    Column("huesped_id", Integer, ForeignKey("huespedes.id"), primary_key=True),
+)
+
 
 # ==============================================================================
-# TABLA 1: HABITACIONES (Inventario físico de las 15 habitaciones)
+# TABLA 1: HABITACIONES (Inventario físico: 101-107 y 201-208)
 # ==============================================================================
 class Habitacion(Base):
     __tablename__ = "habitaciones"
@@ -33,7 +43,8 @@ class Habitacion(Base):
     id = Column(Integer, primary_key=True, index=True)
     numero = Column(
         String(10), unique=True, nullable=False, index=True
-    )  # "01" a "15"
+    )  # "101"-"107" y "201"-"208"
+    piso = Column(Integer, nullable=False, default=1)  # 1 o 2
     tipo_camas = Column(
         String(100), nullable=False
     )  # "1 Cama Sencilla + 1 Doble" o "1 Camarote + 1 Doble"
@@ -55,7 +66,32 @@ class Habitacion(Base):
 
 
 # ==============================================================================
-# TABLA 2: RESERVAS (Hospedajes, Trabajadores y Tarifas por Ocupación)
+# TABLA 2: HUÉSPEDES (Historial de clientes, acompañantes y registro TRA)
+# ==============================================================================
+class Huesped(Base):
+    __tablename__ = "huespedes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo_documento = Column(String(20), default="CC", nullable=False)  # "CC", "CE", "PA", "NIT"
+    documento = Column(String(50), unique=True, nullable=False, index=True)
+    nombres = Column(String(100), nullable=False)
+    apellidos = Column(String(100), nullable=False)
+    telefono = Column(String(30), nullable=True)
+    ciudad_procedencia = Column(String(100), nullable=True)
+    placa_vehiculo = Column(String(20), nullable=True)
+    fecha_registro = Column(DateTime, default=datetime.now, nullable=False)
+
+    # Relaciones
+    reservas_titular = relationship("Reserva", back_populates="titular")
+    reservas_acompanante = relationship(
+        "Reserva",
+        secondary=reserva_acompanantes,
+        back_populates="acompanantes",
+    )
+
+
+# ==============================================================================
+# TABLA 3: RESERVAS (Hospedajes, Trabajadores y Tarifas por Ocupación)
 # ==============================================================================
 class Reserva(Base):
     __tablename__ = "reservas"
@@ -64,14 +100,16 @@ class Reserva(Base):
 
     # Identificador para agrupar habitaciones de una misma empresa o contratista
     grupo_id = Column(String(50), nullable=True, index=True)
-
-    cliente_nombre = Column(String(150), nullable=False)
-    cliente_documento = Column(String(50), nullable=False)
     empresa = Column(String(150), nullable=True)
+
+    # Relación con el Huésped Titular
+    titular_id = Column(Integer, ForeignKey("huespedes.id"), nullable=False)
 
     # Control de tarifa por ocupación
     numero_personas = Column(Integer, default=1, nullable=False)
+    tarifa_descripcion = Column(String(120), nullable=True)  # Ej: "3 Personas - 2 Camas (Aire)"
     precio_noche = Column(Float, nullable=False)
+    es_tarifa_manual = Column(Boolean, default=False, nullable=False)
 
     # Fechas y estadías abiertas (trabajadores sin fecha fija de salida)
     fecha_ingreso = Column(DateTime, nullable=False, default=datetime.now)
@@ -91,6 +129,12 @@ class Reserva(Base):
 
     # Relaciones ORM
     habitacion = relationship("Habitacion", back_populates="reservas")
+    titular = relationship("Huesped", back_populates="reservas_titular")
+    acompanantes = relationship(
+        "Huesped",
+        secondary=reserva_acompanantes,
+        back_populates="reservas_acompanante",
+    )
     consumos = relationship("Consumo", back_populates="reserva")
     pagos = relationship("Pago", back_populates="reserva")
     facturas = relationship(
@@ -99,7 +143,7 @@ class Reserva(Base):
 
 
 # ==============================================================================
-# TABLA 3: PAGOS / ABONOS (Registro de dinero recibido antes/durante la estadía)
+# TABLA 4: PAGOS / ABONOS (Registro de dinero recibido antes/durante la estadía)
 # ==============================================================================
 class Pago(Base):
     __tablename__ = "pagos"
@@ -121,7 +165,7 @@ class Pago(Base):
 
 
 # ==============================================================================
-# TABLA 4: FACTURAS ORDINARIAS / COMPROBANTES DE PAGO
+# TABLA 5: FACTURAS ORDINARIAS / COMPROBANTES DE PAGO (Con soporte DIAN)
 # ==============================================================================
 class Factura(Base):
     __tablename__ = "facturas"
@@ -137,8 +181,8 @@ class Factura(Base):
     dv = Column(String(5), nullable=True)
 
     direccion = Column(String(255), nullable=True, default="N/A")
-    ciudad = Column(String(100), nullable=True, default="Local")
-    departamento = Column(String(100), nullable=True, default="Local")
+    ciudad = Column(String(100), nullable=True, default="Puerto Salgar")
+    departamento = Column(String(100), nullable=True, default="Cundinamarca")
     correo_facturacion = Column(String(150), nullable=True)
     telefono = Column(String(30), nullable=True)
     responsabilidad_fiscal = Column(String(20), default="R-99-PN")
@@ -167,7 +211,7 @@ class Factura(Base):
 
 
 # ==============================================================================
-# TABLA 5: PRODUCTOS Y SERVICIOS (Tienda y Lavandería)
+# TABLA 6: PRODUCTOS Y SERVICIOS (Tienda y Lavandería)
 # ==============================================================================
 class ProductoServicio(Base):
     __tablename__ = "productos_servicios"
@@ -185,7 +229,7 @@ class ProductoServicio(Base):
 
 
 # ==============================================================================
-# TABLA 6: CONSUMOS (Cargos a la habitación / Cortesías)
+# TABLA 7: CONSUMOS (Cargos a la habitación / Cortesías)
 # ==============================================================================
 class Consumo(Base):
     __tablename__ = "consumos"

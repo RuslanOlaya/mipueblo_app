@@ -7,7 +7,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 # ESQUEMAS: HABITACIÓN
 # ==============================================================================
 class HabitacionBase(BaseModel):
-    numero: str = Field(..., description="Número visual de la habitación (ej: '01', '15')")
+    numero: str = Field(..., description="Número visual de la habitación (ej: '101', '208')")
+    piso: int = Field(1, ge=1, le=2, description="Piso 1 (101-107) o Piso 2 (201-208)")
     tipo_camas: str = Field(..., description="Distribución de camas")
     tiene_ventilador: bool = True
     tiene_aire_acondicionado: bool = False
@@ -21,6 +22,26 @@ class HabitacionCreate(HabitacionBase):
 
 class HabitacionResponse(HabitacionBase):
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================================================
+# ESQUEMAS: HUÉSPED (Titular y Acompañantes)
+# ==============================================================================
+class HuespedBase(BaseModel):
+    tipo_documento: str = Field("CC", description="'CC', 'CE', 'PA', 'NIT'")
+    documento: str = Field(..., min_length=3, description="Número de identificación")
+    nombres: str = Field(..., min_length=2)
+    apellidos: str = Field(..., min_length=2)
+    telefono: Optional[str] = None
+    ciudad_procedencia: Optional[str] = None
+    placa_vehiculo: Optional[str] = None
+
+
+class HuespedResponse(HuespedBase):
+    id: int
+    fecha_registro: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -92,32 +113,58 @@ class PagoResponse(PagoCreate):
 
 
 # ==============================================================================
-# ESQUEMAS: RESERVA
+# ESQUEMAS: RESERVA / CHECK-IN
 # ==============================================================================
-class ReservaBase(BaseModel):
+class ReservaCreate(BaseModel):
+    habitacion_id: int
+    titular: HuespedBase
+    acompanantes: List[HuespedBase] = []
+
     grupo_id: Optional[str] = None
-    cliente_nombre: str
-    cliente_documento: str
     empresa: Optional[str] = None
+
     numero_personas: int = Field(1, gt=0)
+    tarifa_descripcion: Optional[str] = None
     precio_noche: float = Field(..., gt=0)
+    es_tarifa_manual: bool = False
+
     fecha_ingreso: datetime = Field(default_factory=datetime.now)
     fecha_salida: Optional[datetime] = None  # None/null para estadía abierta
     es_estadia_abierta: bool = False
-    habitacion_id: int
-    descuento_monto: float = 0.0
-    descuento_porcentaje: float = 0.0
-    recargo_adicional: float = 0.0
+
+    descuento_monto: float = Field(0.0, ge=0)
+    descuento_porcentaje: float = Field(0.0, ge=0, le=100)
+    recargo_adicional: float = Field(0.0, ge=0)
     observaciones_cobro: Optional[str] = None
 
+    # Abono registrado directamente en el formulario de Check-in
+    abono_inicial: float = Field(0.0, ge=0)
+    metodo_pago_abono: str = "Efectivo"
 
-class ReservaCreate(ReservaBase):
-    pass
 
-
-class ReservaResponse(ReservaBase):
+class ReservaResponse(BaseModel):
     id: int
+    habitacion_id: int
+    titular: HuespedResponse
+    acompanantes: List[HuespedResponse] = []
+
+    grupo_id: Optional[str] = None
+    empresa: Optional[str] = None
+
+    numero_personas: int
+    tarifa_descripcion: Optional[str] = None
+    precio_noche: float
+    es_tarifa_manual: bool
+
+    fecha_ingreso: datetime
+    fecha_salida: Optional[datetime] = None
+    es_estadia_abierta: bool
     activa: bool
+
+    descuento_monto: float
+    descuento_porcentaje: float
+    recargo_adicional: float
+    observaciones_cobro: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -133,8 +180,8 @@ class FacturaCreate(BaseModel):
     documento_numero: str
     dv: Optional[str] = None
     direccion: Optional[str] = "N/A"
-    ciudad: Optional[str] = "Local"
-    departamento: Optional[str] = "Local"
+    ciudad: Optional[str] = "Puerto Salgar"
+    departamento: Optional[str] = "Cundinamarca"
     correo_facturacion: Optional[EmailStr] = None
     telefono: Optional[str] = None
     responsabilidad_fiscal: str = "R-99-PN"

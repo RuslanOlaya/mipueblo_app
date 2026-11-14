@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -12,8 +14,8 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="API PMS - Hotel Mi Pueblo",
-    version="1.0.0",
-    description="Sistema de gestión hotelera con liquidación automática y soporte para facturación",
+    version="2.0.0",
+    description="Sistema de gestión hotelera con historial de huéspedes, liquidación automática y facturación",
 )
 
 # Configuración CORS para conexión con la interfaz gráfica / frontend
@@ -46,12 +48,54 @@ MATRIZ_TARIFAS = {
 }
 
 
+def obtener_o_crear_huesped(
+    db: Session, datos: schemas.HuespedBase
+) -> models.Huesped:
+    """Busca un huésped por documento; si existe actualiza sus datos, si no lo crea."""
+    huesped = (
+        db.query(models.Huesped)
+        .filter(models.Huesped.documento == datos.documento.strip())
+        .first()
+    )
+    if huesped:
+        huesped.tipo_documento = datos.tipo_documento
+        huesped.nombres = datos.nombres.strip()
+        huesped.apellidos = datos.apellidos.strip()
+        if datos.telefono:
+            huesped.telefono = datos.telefono.strip()
+        if datos.ciudad_procedencia:
+            huesped.ciudad_procedencia = datos.ciudad_procedencia.strip()
+        if datos.placa_vehiculo:
+            huesped.placa_vehiculo = datos.placa_vehiculo.strip().upper()
+    else:
+        huesped = models.Huesped(
+            tipo_documento=datos.tipo_documento,
+            documento=datos.documento.strip(),
+            nombres=datos.nombres.strip(),
+            apellidos=datos.apellidos.strip(),
+            telefono=datos.telefono.strip() if datos.telefono else None,
+            ciudad_procedencia=(
+                datos.ciudad_procedencia.strip()
+                if datos.ciudad_procedencia
+                else None
+            ),
+            placa_vehiculo=(
+                datos.placa_vehiculo.strip().upper()
+                if datos.placa_vehiculo
+                else None
+            ),
+        )
+        db.add(huesped)
+        db.flush()
+    return huesped
+
+
 # ==============================================================================
 # ENDPOINTS: HABITACIONES
 # ==============================================================================
 @app.get("/habitaciones", response_model=List[schemas.HabitacionResponse])
 def listar_habitaciones(db: Session = Depends(get_db)):
-    """Obtiene el mapa general de las 15 habitaciones y su estado actual."""
+    """Obtiene el mapa general de las 15 habitaciones (101-107 y 201-208) y su estado."""
     return (
         db.query(models.Habitacion)
         .order_by(models.Habitacion.numero.asc())
@@ -77,7 +121,9 @@ def obtener_habitacion(habitacion_id: int, db: Session = Depends(get_db)):
 
 @app.patch("/habitaciones/{habitacion_id}/mantenimiento")
 def cambiar_estado_mantenimiento(
-    habitacion_id: int, observacion: str, db: Session = Depends(get_db)
+    habitacion_id: int,
+    observacion: str = "Mantenimiento general",
+    db: Session = Depends(get_db),
 ):
     """Bloquea o libera una habitación para mantenimiento/reparaciones."""
     habitacion = (
@@ -88,6 +134,12 @@ def cambiar_estado_mantenimiento(
     if not habitacion:
         raise HTTPException(
             status_code=404, detail="Habitación no encontrada"
+        )
+
+    if habitacion.estado == "Ocupada":
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede poner en mantenimiento una habitación ocupada",
         )
 
     if habitacion.estado == "Mantenimiento":
@@ -105,6 +157,24 @@ def cambiar_estado_mantenimiento(
 
 
 # ==============================================================================
+# ENDPOINTS: HUÉSPEDES (Historial y Búsqueda)
+# ==============================================================================
+@app.get("/huespedes/{documento}", response_model=schemas.HuespedResponse)
+def buscar_huesped_por_documento(documento: str, db: Session = Depends(get_db)):
+    """Busca un huésped en el historial para autocompletar el formulario de Check-in."""
+    huesped = (
+        db.query(models.Huesped)
+        .filter(models.Huesped.documento == documento.strip())
+        .first()
+    )
+    if not huesped:
+        raise HTTPException(
+            status_code=404, detail="Huésped no encontrado en el historial"
+        )
+    return huesped
+
+
+# ==============================================================================
 # ENDPOINTS: RESERVAS / HOSPEDAJES (Check-in, Check-out, Liquidación)
 # ==============================================================================
 @app.post(
@@ -115,7 +185,7 @@ def cambiar_estado_mantenimiento(
 def crear_reserva_checkin(
     reserva: schemas.ReservaCreate, db: Session = Depends(get_db)
 ):
-    """Registra el Check-in de un huésped o grupo de trabajadores."""
+    """Registra el Check-in de un huésped titular, acompañantes y abono inicial."""
     habitacion = (
         db.query(models.Habitacion)
         .filter(models.Habitacion.id == reserva.habitacion_id)
@@ -132,22 +202,57 @@ def crear_reserva_checkin(
             detail=f"La habitación {habitacion.numero} no está disponible (Estado: {habitacion.estado})",
         )
 
-    # Crear instancia de la reserva
-    nueva_reserva = models.Reserva(**reserva.model_dump())
-    nueva_reserva.activa = True
+    # 1. Crear o actualizar huésped titular y acompañantes
+    titular = obtener_o_crear_huesped(db, reserva.titular)
+    lista_acompanantes = [
+        obtener_o_crear_huesped(db, acomp)
+        for acomp in reserva.acompanantes
+        if acomp.documento.strip()
+    ]
 
-    # Cambiar estado de la habitación a Ocupada
+    # 2. Crear instancia de la reserva
+    nueva_reserva = models.Reserva(
+        habitacion_id=reserva.habitacion_id,
+        titular_id=titular.id,
+        grupo_id=reserva.grupo_id,
+        empresa=reserva.empresa,
+        numero_personas=reserva.numero_personas,
+        tarifa_descripcion=reserva.tarifa_descripcion,
+        precio_noche=reserva.precio_noche,
+        es_tarifa_manual=reserva.es_tarifa_manual,
+        fecha_ingreso=reserva.fecha_ingreso,
+        fecha_salida=None if reserva.es_estadia_abierta else reserva.fecha_salida,
+        es_estadia_abierta=reserva.es_estadia_abierta,
+        descuento_monto=reserva.descuento_monto,
+        descuento_porcentaje=reserva.descuento_porcentaje,
+        recargo_adicional=reserva.recargo_adicional,
+        observaciones_cobro=reserva.observaciones_cobro,
+        activa=True,
+    )
+    nueva_reserva.acompanantes = lista_acompanantes
+    db.add(nueva_reserva)
+    db.flush()
+
+    # 3. Registrar abono inicial si se ingresó en el formulario
+    if reserva.abono_inicial > 0:
+        abono = models.Pago(
+            reserva_id=nueva_reserva.id,
+            monto=reserva.abono_inicial,
+            metodo_pago=reserva.metodo_pago_abono,
+            concepto="Abono inicial",
+            observacion="Registrado durante el Check-in",
+        )
+        db.add(abono)
+
+    # 4. Cambiar estado de la habitación a Ocupada
     habitacion.estado = "Ocupada"
 
-    db.add(nueva_reserva)
     db.commit()
     db.refresh(nueva_reserva)
     return nueva_reserva
 
 
-@app.get(
-    "/reservas/activas", response_model=List[schemas.ReservaResponse]
-)
+@app.get("/reservas/activas", response_model=List[schemas.ReservaResponse])
 def listar_reservas_activas(db: Session = Depends(get_db)):
     """Lista los huéspedes alojados actualmente en el hotel."""
     return (
@@ -170,7 +275,9 @@ def obtener_liquidacion_reserva(
 
     # 1. Calcular días hospedados (Mínimo 1 día)
     fecha_fin = (
-        reserva.fecha_salida if reserva.fecha_salida else datetime.now()
+        reserva.fecha_salida
+        if (reserva.fecha_salida and not reserva.es_estadia_abierta)
+        else datetime.now()
     )
     dias_estadia = (fecha_fin - reserva.fecha_ingreso).days
     dias_hospedados = max(1, dias_estadia)
@@ -216,8 +323,12 @@ def obtener_liquidacion_reserva(
 
     return {
         "reserva_id": reserva.id,
-        "cliente": reserva.cliente_nombre,
+        "cliente": f"{reserva.titular.nombres} {reserva.titular.apellidos}",
+        "documento": reserva.titular.documento,
+        "empresa": reserva.empresa,
+        "grupo_id": reserva.grupo_id,
         "habitacion_id": reserva.habitacion_id,
+        "habitacion_numero": reserva.habitacion.numero,
         "dias_hospedados": dias_hospedados,
         "tarifa_noche": reserva.precio_noche,
         "subtotal_noches": subtotal_noches,
@@ -232,7 +343,7 @@ def obtener_liquidacion_reserva(
 
 
 # ==============================================================================
-# ENDPOINTS: ABONOS Y CONSUMOS (Pagos parciales y Tienda/Lavandería)
+# ENDPOINTS: ABONOS, PRODUCTOS Y CONSUMOS (Pagos parciales y Tienda/Lavandería)
 # ==============================================================================
 @app.post(
     "/pagos",
@@ -254,6 +365,32 @@ def registrar_abono(pago: schemas.PagoCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_pago)
     return nuevo_pago
+
+
+@app.get("/productos", response_model=List[schemas.ProductoServicioResponse])
+def listar_productos(db: Session = Depends(get_db)):
+    """Lista los productos de tienda y servicios de lavandería activos."""
+    return (
+        db.query(models.ProductoServicio)
+        .filter(models.ProductoServicio.activo == True)
+        .all()
+    )
+
+
+@app.post(
+    "/productos",
+    response_model=schemas.ProductoServicioResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def crear_producto(
+    producto: schemas.ProductoServicioCreate, db: Session = Depends(get_db)
+):
+    """Agrega un nuevo producto o servicio al catálogo."""
+    nuevo = models.ProductoServicio(**producto.model_dump())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
 
 
 @app.post(
@@ -332,7 +469,7 @@ def generar_comprobante_factura(
 
     # Crear la factura/comprobante
     datos_factura = factura_data.model_dump()
-    reserva_ids = datos_factura.pop("reserva_ids")
+    datos_factura.pop("reserva_ids")
 
     nueva_factura = models.Factura(**datos_factura)
     nueva_factura.reservas = reservas
@@ -362,9 +499,13 @@ def generar_comprobante_factura(
     db.refresh(nueva_factura)
     return nueva_factura
 
-@app.get("/")
-def ruta_raiz():
-    return {
-        "mensaje": "¡Servidor del Hotel Mi Pueblo activo!",
-        "documentacion": "http://127.0.0.1:8000/docs",
-    }
+
+# ==============================================================================
+# ARCHIVOS ESTÁTICOS Y FRONTEND
+# ==============================================================================
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def servir_frontend():
+    return FileResponse("frontend/index.html")
